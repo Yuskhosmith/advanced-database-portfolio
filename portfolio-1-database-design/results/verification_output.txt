@@ -1,0 +1,107 @@
+=== 1. Row counts ===
+     table_name      | count  
+---------------------+--------
+ faculty             |      4
+ department          |     12
+ programme           |     12
+ lecturer            |    180
+ student             |  20000
+ course              |    576
+ course_prerequisite |    432
+ academic_session    |      6
+ semester            |     12
+ course_offering     |   3456
+ grade_scale         |      6
+ enrollment          | 613360
+
+=== 2. Integrity tests (each must be REJECTED by the DBMS) ===
+                                                                                                   result                                                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ PASS  T01 exam score above 70 -> [23514] new row for relation "enrollment" violates check constraint "enrollment_exam_score_check"
+ PASS  T02 overlapping grade band -> [23P01] conflicting key value violates exclusion constraint "grade_scale_score_range_excl"
+ PASS  T03 duplicate registration -> [23505] duplicate key value violates unique constraint "enrollment_student_id_offering_id_key"
+ PASS  T04 enrollment for unknown student (FK) -> [23503] insert or update on table "enrollment" violates foreign key constraint "enrollment_student_id_fkey"
+ PASS  T05 malformed matric number -> [23514] new row for relation "student" violates check constraint "student_matric_no_check"
+ PASS  T06 course code does not match level -> [23514] new row for relation "course" violates check constraint "course_check"
+ PASS  T07 seats above capacity -> [23514] new row for relation "course_offering" violates check constraint "seats_within_capacity"
+ PASS  T08 COMPLETED without scores -> [23514] new row for relation "enrollment" violates check constraint "enrollment_check"
+ PASS  T09 change APPROVED result without Senate override -> [P0001] Result 1 is APPROVED and cannot be changed without Senate override
+ PASS  T10 write to generated total_score -> [428C9] column "total_score" can only be updated to DEFAULT
+ PASS  T11 course as its own prerequisite -> [23514] new row for relation "course_prerequisite" violates check constraint "course_prerequisite_check"
+ PASS  T12 delete a student who has results (RESTRICT) -> [23001] update or delete on table "student" violates RESTRICT setting of foreign key constraint "enrollment_student_id_fkey" on table "enrollment"
+ PASS  T13 session name years not consecutive -> [23514] new row for relation "academic_session" violates check constraint "academic_session_name_check"
+ PASS  T14 register for a closed (past) semester -> [P0001] Registration is closed for this semester
+
+=== 3. Every total score maps to exactly one grade (expect 0 rows unmatched) ===
+ completed_results | unmatched 
+-------------------+-----------
+            560028 |         0
+
+=== 4. Grade distribution ===
+ grade_letter |  remark   | results | pct  
+--------------+-----------+---------+------
+ A            | Excellent |  145130 | 25.9
+ B            | Very Good |  141115 | 25.2
+ C            | Good      |  138328 | 24.7
+ D            | Fair      |   51405 |  9.2
+ E            | Pass      |   36638 |  6.5
+ F            | Fail      |   47412 |  8.5
+
+=== 5. Sample transcript (student 7) ===
+   matric_no   | student_name  | session_name |  term  | units_taken | units_passed | gpa  | cgpa 
+---------------+---------------+--------------+--------+-------------+--------------+------+------
+ AU/2022/00007 | Ebuka Adeleke | 2022/2023    | FIRST  |          18 |           18 | 4.44 | 4.44
+ AU/2022/00007 | Ebuka Adeleke | 2022/2023    | SECOND |          18 |           18 | 3.39 | 3.92
+ AU/2022/00007 | Ebuka Adeleke | 2023/2024    | FIRST  |          18 |           18 | 4.61 | 4.15
+ AU/2022/00007 | Ebuka Adeleke | 2023/2024    | SECOND |          18 |           18 | 3.72 | 4.04
+ AU/2022/00007 | Ebuka Adeleke | 2024/2025    | FIRST  |          18 |           18 | 4.17 | 4.07
+ AU/2022/00007 | Ebuka Adeleke | 2024/2025    | SECOND |          18 |           18 | 4.00 | 4.06
+ AU/2022/00007 | Ebuka Adeleke | 2025/2026    | FIRST  |          18 |           18 | 3.67 | 4.00
+ AU/2022/00007 | Ebuka Adeleke | 2025/2026    | SECOND |          18 |           18 | 3.94 | 3.99
+
+=== 6. Detailed results for student 7, first semester of entry ===
+ session_name | term  | course_code | cu |  ca  | exam | total | grade | gp  
+--------------+-------+-------------+----+------+------+-------+-------+-----
+ 2022/2023    | FIRST | IFT101      |  3 | 16.0 | 43.0 |  59.0 | C     | 3.0
+ 2022/2023    | FIRST | IFT102      |  4 | 23.0 | 49.0 |  72.0 | A     | 5.0
+ 2022/2023    | FIRST | IFT103      |  2 | 19.0 | 37.0 |  56.0 | C     | 3.0
+ 2022/2023    | FIRST | IFT104      |  3 | 23.0 | 54.0 |  77.0 | A     | 5.0
+ 2022/2023    | FIRST | IFT105      |  4 | 24.0 | 61.0 |  85.0 | A     | 5.0
+ 2022/2023    | FIRST | IFT106      |  2 | 20.0 | 52.0 |  72.0 | A     | 5.0
+
+=== 7. CGPA and class of degree (functions) ===
+   matric_no   |  status   | cgpa |       class        
+---------------+-----------+------+--------------------
+ AU/2022/00001 | GRADUATED | 4.58 | First Class
+ AU/2022/00007 | GRADUATED | 3.99 | Second Class Upper
+ AU/2022/00013 | GRADUATED | 3.94 | Second Class Upper
+ AU/2022/00019 | GRADUATED | 2.94 | Second Class Lower
+ AU/2022/00025 | GRADUATED | 2.93 | Second Class Lower
+
+=== 8. Prerequisite rule: a student who FAILED a 100L course cannot take the 200L follow-up ===
+                                               result                                                
+-----------------------------------------------------------------------------------------------------
+ PASS  T15 register 200L course without passing CSC105 -> [AU002] Prerequisite(s) not passed: CSC105
+
+=== 9. Row-level security: lecturer only sees enrollments for offerings they teach ===
+ visible_enrollments_for_lecturer_1 | offerings 
+------------------------------------+-----------
+                               3518 |        12
+
+ actual_enrollments_taught_by_lecturer_1 
+-----------------------------------------
+                                    3518
+
+ rows_visible_to_student_7 | distinct_students 
+---------------------------+-------------------
+                        48 |                 1
+
+                                            result                                             
+-----------------------------------------------------------------------------------------------
+ PASS  T16 student tries to change own score -> [42501] permission denied for table enrollment
+
+=== 10. Database size ===
+ database_size | enrollment_table_size 
+---------------+-----------------------
+ 109 MB        | 93 MB
+

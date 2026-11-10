@@ -1,0 +1,125 @@
+erDiagram
+    FACULTY ||--|{ DEPARTMENT : "has"
+    DEPARTMENT ||--|{ PROGRAMME : "offers"
+    DEPARTMENT ||--o{ LECTURER : "employs"
+    DEPARTMENT ||--|{ COURSE : "owns"
+    PROGRAMME ||--o{ STUDENT : "admits"
+    COURSE ||--o{ COURSE_PREREQUISITE : "requires"
+    COURSE ||--o{ COURSE_PREREQUISITE : "is required by"
+    ACADEMIC_SESSION ||--|{ SEMESTER : "is divided into"
+    COURSE ||--o{ COURSE_OFFERING : "is offered as"
+    SEMESTER ||--o{ COURSE_OFFERING : "schedules"
+    LECTURER ||--o{ COURSE_OFFERING : "teaches"
+    STUDENT ||--o{ ENROLLMENT : "registers"
+    COURSE_OFFERING ||--o{ ENROLLMENT : "contains"
+    ENROLLMENT ||--o{ GRADE_AUDIT : "is audited by"
+    GRADE_SCALE |o..o{ ENROLLMENT : "grades (derived from total_score)"
+
+    FACULTY {
+        smallint faculty_id PK
+        varchar code UK
+        varchar name UK
+    }
+    DEPARTMENT {
+        smallint department_id PK
+        smallint faculty_id FK
+        char code UK
+        varchar name UK
+    }
+    PROGRAMME {
+        smallint programme_id PK
+        smallint department_id FK
+        varchar code UK
+        varchar name
+        varchar award
+        smallint duration_years
+    }
+    LECTURER {
+        int lecturer_id PK
+        varchar staff_no UK
+        smallint department_id FK
+        varchar title
+        varchar first_name
+        varchar last_name
+        varchar email UK
+        varchar academic_rank
+        date hire_date
+    }
+    STUDENT {
+        int student_id PK
+        varchar matric_no UK
+        smallint programme_id FK
+        varchar first_name
+        varchar last_name
+        char gender
+        date date_of_birth
+        varchar email UK
+        smallint entry_year
+        smallint current_level
+        varchar status
+    }
+    COURSE {
+        int course_id PK
+        char course_code UK
+        varchar title
+        smallint department_id FK
+        smallint credit_units
+        smallint level
+        varchar term
+    }
+    COURSE_PREREQUISITE {
+        int course_id PK,FK
+        int prereq_course_id PK,FK
+    }
+    ACADEMIC_SESSION {
+        smallint session_id PK
+        char name UK
+        date start_date
+        date end_date
+    }
+    SEMESTER {
+        smallint semester_id PK
+        smallint session_id FK
+        varchar term
+        date start_date
+        date end_date
+        boolean registration_open
+        boolean results_published
+    }
+    COURSE_OFFERING {
+        int offering_id PK
+        int course_id FK
+        smallint semester_id FK
+        int lecturer_id FK
+        int capacity
+        int seats_taken
+    }
+    ENROLLMENT {
+        bigint enrollment_id PK
+        int student_id FK
+        int offering_id FK
+        timestamptz registered_at
+        varchar status
+        numeric ca_score
+        numeric exam_score
+        numeric total_score "GENERATED ca+exam"
+        varchar result_status
+        timestamptz graded_at
+    }
+    GRADE_SCALE {
+        char grade_letter PK
+        numrange score_range "EXCLUDE no overlap"
+        numeric grade_point UK
+        varchar remark
+    }
+    GRADE_AUDIT {
+        bigint audit_id PK
+        bigint enrollment_id FK
+        numeric old_ca
+        numeric new_ca
+        numeric old_exam
+        numeric new_exam
+        text changed_by
+        timestamptz changed_at
+        text reason
+    }

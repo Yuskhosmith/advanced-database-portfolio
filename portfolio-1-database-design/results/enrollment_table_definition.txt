@@ -1,0 +1,53 @@
+                                                                                                                     Table "public.enrollment"
+    Column     |           Type           | Collation | Nullable |                       Default                        | Storage  | Compression | Stats target |                                           Description                                            
+---------------+--------------------------+-----------+----------+------------------------------------------------------+----------+-------------+--------------+--------------------------------------------------------------------------------------------------
+ enrollment_id | bigint                   |           | not null | generated always as identity                         | plain    |             |              | 
+ student_id    | integer                  |           | not null |                                                      | plain    |             |              | 
+ offering_id   | integer                  |           | not null |                                                      | plain    |             |              | 
+ registered_at | timestamp with time zone |           | not null | now()                                                | plain    |             |              | 
+ status        | character varying(10)    |           | not null | 'REGISTERED'::character varying                      | extended |             |              | 
+ ca_score      | numeric(4,1)             |           |          |                                                      | main     |             |              | 
+ exam_score    | numeric(4,1)             |           |          |                                                      | main     |             |              | 
+ total_score   | numeric(4,1)             |           |          | generated always as ((ca_score + exam_score)) stored | main     |             |              | Derived (generated) column: ca_score + exam_score. Maintained by the DBMS, so no update anomaly.
+ result_status | character varying(10)    |           | not null | 'PENDING'::character varying                         | extended |             |              | 
+ graded_at     | timestamp with time zone |           |          |                                                      | plain    |             |              | 
+Indexes:
+    "enrollment_pkey" PRIMARY KEY, btree (enrollment_id)
+    "enrollment_student_id_offering_id_key" UNIQUE CONSTRAINT, btree (student_id, offering_id)
+Check constraints:
+    "enrollment_ca_score_check" CHECK (ca_score >= 0::numeric AND ca_score <= 30::numeric)
+    "enrollment_check" CHECK (status::text <> 'COMPLETED'::text OR ca_score IS NOT NULL AND exam_score IS NOT NULL)
+    "enrollment_check1" CHECK (result_status::text <> 'APPROVED'::text OR status::text = 'COMPLETED'::text)
+    "enrollment_exam_score_check" CHECK (exam_score >= 0::numeric AND exam_score <= 70::numeric)
+    "enrollment_result_status_check" CHECK (result_status::text = ANY (ARRAY['PENDING'::character varying, 'SUBMITTED'::character varying, 'APPROVED'::character varying]::text[]))
+    "enrollment_status_check" CHECK (status::text = ANY (ARRAY['REGISTERED'::character varying, 'DROPPED'::character varying, 'COMPLETED'::character varying]::text[]))
+Foreign-key constraints:
+    "enrollment_offering_id_fkey" FOREIGN KEY (offering_id) REFERENCES course_offering(offering_id) ON DELETE RESTRICT
+    "enrollment_student_id_fkey" FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE RESTRICT
+Referenced by:
+    TABLE "grade_audit" CONSTRAINT "grade_audit_enrollment_id_fkey" FOREIGN KEY (enrollment_id) REFERENCES enrollment(enrollment_id) ON DELETE CASCADE
+Policies:
+    POLICY "lecturer_own_course"
+      TO uni_lecturer
+      USING ((offering_id IN ( SELECT course_offering.offering_id
+   FROM course_offering
+  WHERE (course_offering.lecturer_id = (current_setting('app.lecturer_id'::text, true))::integer))))
+    POLICY "registrar_all"
+      TO uni_registrar
+      USING (true)
+      WITH CHECK (true)
+    POLICY "student_own_results" FOR SELECT
+      TO uni_student
+      USING (((student_id = (current_setting('app.student_id'::text, true))::integer) AND ((result_status)::text = 'APPROVED'::text)))
+Not-null constraints:
+    "enrollment_enrollment_id_not_null" NOT NULL "enrollment_id"
+    "enrollment_student_id_not_null" NOT NULL "student_id"
+    "enrollment_offering_id_not_null" NOT NULL "offering_id"
+    "enrollment_registered_at_not_null" NOT NULL "registered_at"
+    "enrollment_status_not_null" NOT NULL "status"
+    "enrollment_result_status_not_null" NOT NULL "result_status"
+Triggers:
+    enrollment_grade_audit AFTER UPDATE OF ca_score, exam_score ON enrollment FOR EACH ROW EXECUTE FUNCTION trg_grade_audit()
+    enrollment_protect_approved BEFORE UPDATE ON enrollment FOR EACH ROW EXECUTE FUNCTION trg_protect_approved()
+Access method: heap
+

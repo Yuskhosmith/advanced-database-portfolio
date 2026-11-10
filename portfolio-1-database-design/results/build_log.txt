@@ -1,0 +1,10 @@
+>> running sql/01_schema.sql
+   done in 0s
+>> running sql/02_reference_data.sql
+   done in 0s
+>> running sql/03_generate_data.sql
+   done in 12s
+>> running sql/04_logic.sql
+   done in 0s
+>> running sql/05_security.sql
+   done in 1s
