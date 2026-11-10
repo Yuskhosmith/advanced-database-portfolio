@@ -1,0 +1,34 @@
+-- Q03 Top 3 per department (Dean's list)
+-- file: sql/queries/q03_top_students_per_department_optimised.sql
+-- phase: optimised
+
+SELECT dept, rnk, matric_no, student, cgpa FROM (
+    SELECT m.dept_code AS dept, m.matric_no, m.student_name AS student, m.cgpa,
+           dense_rank() OVER (PARTITION BY m.department_id ORDER BY m.cgpa DESC) AS rnk
+    FROM mv_student_cgpa m
+    WHERE m.status = 'ACTIVE'
+) r
+WHERE rnk <= 3 ORDER BY dept, rnk, matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=1886.68..1909.67 rows=9194 width=45) (actual time=5.781..5.784 rows=159.00 loops=1)
+  Sort Key: r.dept, r.rnk, r.matric_no
+  Sort Method: quicksort  Memory: 35kB
+  Buffers: shared hit=192
+  ->  Subquery Scan on r  (cost=1005.62..1281.42 rows=9194 width=45) (actual time=5.018..5.728 rows=159.00 loops=1)
+        Buffers: shared hit=192
+        ->  WindowAgg  (cost=1005.62..1189.48 rows=9194 width=47) (actual time=5.018..5.720 rows=159.00 loops=1)
+              Window: w1 AS (PARTITION BY m.department_id ORDER BY m.cgpa ROWS UNBOUNDED PRECEDING)
+              Run Condition: (dense_rank() OVER w1 <= 3)
+              Storage: Memory  Maximum Storage: 17kB
+              Buffers: shared hit=192
+              ->  Sort  (cost=1005.60..1028.59 rows=9194 width=39) (actual time=5.017..5.209 rows=9194.00 loops=1)
+                    Sort Key: m.department_id, m.cgpa DESC
+                    Sort Method: quicksort  Memory: 940kB
+                    Buffers: shared hit=192
+                    ->  Seq Scan on mv_student_cgpa m  (cost=0.00..400.34 rows=9194 width=39) (actual time=0.379..1.381 rows=9194.00 loops=1)
+                          Filter: ((status)::text = 'ACTIVE'::text)
+                          Rows Removed by Filter: 7473
+                          Buffers: shared hit=192
+Planning Time: 0.021 ms
+Execution Time: 5.793 ms

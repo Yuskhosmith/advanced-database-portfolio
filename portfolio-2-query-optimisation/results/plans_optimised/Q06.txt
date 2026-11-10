@@ -1,0 +1,64 @@
+-- Q06 Lecturer workload (current semester)
+-- file: sql/queries/q06_lecturer_workload.sql
+-- phase: optimised
+
+SELECT l.staff_no, l.title || ' ' || l.last_name AS lecturer,
+       count(DISTINCT o.offering_id) AS courses,
+       count(e.enrollment_id)        AS students,
+       count(e.enrollment_id) FILTER (WHERE e.result_status = 'PENDING') AS pending_results
+FROM semester sem
+JOIN course_offering o ON o.semester_id = sem.semester_id
+JOIN lecturer l        ON l.lecturer_id = o.lecturer_id
+LEFT JOIN enrollment e ON e.offering_id = o.offering_id AND e.status <> 'DROPPED'
+WHERE sem.registration_open
+GROUP BY l.lecturer_id, l.staff_no, l.title, l.last_name
+ORDER BY students DESC
+LIMIT 10;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Limit  (cost=9845.45..9845.48 rows=10 width=78) (actual time=29.428..29.430 rows=10.00 loops=1)
+  Buffers: shared hit=46582
+  ->  Sort  (cost=9845.45..9845.90 rows=180 width=78) (actual time=29.428..29.429 rows=10.00 loops=1)
+        Sort Key: (count(e.enrollment_id)) DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=46582
+        ->  GroupAggregate  (cost=48.39..9841.56 rows=180 width=78) (actual time=0.335..29.402 rows=156.00 loops=1)
+              Group Key: l.staff_no
+              Buffers: shared hit=46582
+              ->  Incremental Sort  (cost=48.39..9199.95 rows=51113 width=42) (actual time=0.173..23.458 rows=53428.00 loops=1)
+                    Sort Key: l.staff_no, o.offering_id
+                    Presorted Key: l.staff_no
+                    Full-sort Groups: 127  Sort Method: quicksort  Average Memory: 29kB  Peak Memory: 29kB
+                    Pre-sorted Groups: 156  Sort Method: quicksort  Average Memory: 86kB  Peak Memory: 93kB
+                    Buffers: shared hit=46582
+                    ->  Nested Loop Left Join  (cost=0.85..6474.70 rows=51113 width=42) (actual time=0.024..15.518 rows=53428.00 loops=1)
+                          Buffers: shared hit=46582
+                          ->  Nested Loop  (cost=0.43..454.26 rows=288 width=26) (actual time=0.019..1.176 rows=288.00 loops=1)
+                                Join Filter: (sem.semester_id = o.semester_id)
+                                Rows Removed by Join Filter: 3168
+                                Buffers: shared hit=2462
+                                ->  Nested Loop  (cost=0.43..401.29 rows=3456 width=28) (actual time=0.005..0.754 rows=3456.00 loops=1)
+                                      Buffers: shared hit=2461
+                                      ->  Index Scan using lecturer_staff_no_key on lecturer l  (cost=0.14..16.84 rows=180 width=22) (actual time=0.003..0.023 rows=180.00 loops=1)
+                                            Index Searches: 1
+                                            Buffers: shared hit=4
+                                      ->  Index Scan using idx_offering_lecturer on course_offering o  (cost=0.28..1.95 rows=19 width=10) (actual time=0.001..0.003 rows=19.20 loops=180)
+                                            Index Cond: (lecturer_id = l.lecturer_id)
+                                            Index Searches: 180
+                                            Buffers: shared hit=2457
+                                ->  Materialize  (cost=0.00..1.12 rows=1 width=2) (actual time=0.000..0.000 rows=1.00 loops=3456)
+                                      Storage: Memory  Maximum Storage: 17kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on semester sem  (cost=0.00..1.12 rows=1 width=2) (actual time=0.005..0.005 rows=1.00 loops=1)
+                                            Filter: registration_open
+                                            Rows Removed by Filter: 11
+                                            Buffers: shared hit=1
+                          ->  Index Scan using idx_enrollment_offering_cover on enrollment e  (cost=0.42..18.12 rows=278 width=20) (actual time=0.002..0.035 rows=185.18 loops=288)
+                                Index Cond: (offering_id = o.offering_id)
+                                Filter: ((status)::text <> 'DROPPED'::text)
+                                Index Searches: 288
+                                Buffers: shared hit=44120
+Planning:
+  Buffers: shared hit=25
+Planning Time: 0.288 ms
+Execution Time: 29.455 ms

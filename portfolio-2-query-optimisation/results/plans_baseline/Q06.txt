@@ -1,0 +1,64 @@
+-- Q06 Lecturer workload (current semester)
+-- file: sql/queries/q06_lecturer_workload.sql
+-- phase: baseline
+
+SELECT l.staff_no, l.title || ' ' || l.last_name AS lecturer,
+       count(DISTINCT o.offering_id) AS courses,
+       count(e.enrollment_id)        AS students,
+       count(e.enrollment_id) FILTER (WHERE e.result_status = 'PENDING') AS pending_results
+FROM semester sem
+JOIN course_offering o ON o.semester_id = sem.semester_id
+JOIN lecturer l        ON l.lecturer_id = o.lecturer_id
+LEFT JOIN enrollment e ON e.offering_id = o.offering_id AND e.status <> 'DROPPED'
+WHERE sem.registration_open
+GROUP BY l.lecturer_id, l.staff_no, l.title, l.last_name
+ORDER BY students DESC
+LIMIT 10;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Limit  (cost=22826.31..22826.33 rows=10 width=78) (actual time=84.567..84.569 rows=10.00 loops=1)
+  Buffers: shared hit=7522, temp read=371 written=372
+  ->  Sort  (cost=22826.31..22826.76 rows=180 width=78) (actual time=84.566..84.568 rows=10.00 loops=1)
+        Sort Key: (count(e.enrollment_id)) DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=7522, temp read=371 written=372
+        ->  GroupAggregate  (cost=22053.02..22822.42 rows=180 width=78) (actual time=75.207..84.547 rows=156.00 loops=1)
+              Group Key: l.staff_no
+              Buffers: shared hit=7522, temp read=371 written=372
+              ->  Sort  (cost=22053.02..22180.80 rows=51113 width=42) (actual time=75.155..78.580 rows=53428.00 loops=1)
+                    Sort Key: l.staff_no, o.offering_id
+                    Sort Method: external merge  Disk: 2968kB
+                    Buffers: shared hit=7522, temp read=371 written=372
+                    ->  Hash Right Join  (cost=113.40..18055.63 rows=51113 width=42) (actual time=52.495..62.119 rows=53428.00 loops=1)
+                          Hash Cond: (e.offering_id = o.offering_id)
+                          Buffers: shared hit=7522
+                          ->  Seq Scan on enrollment e  (cost=0.00..15131.00 rows=613360 width=20) (actual time=0.002..31.724 rows=613360.00 loops=1)
+                                Filter: ((status)::text <> 'DROPPED'::text)
+                                Buffers: shared hit=7464
+                          ->  Hash  (cost=109.80..109.80 rows=288 width=26) (actual time=0.346..0.348 rows=288.00 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 26kB
+                                Buffers: shared hit=58
+                                ->  Hash Join  (cost=8.18..109.80 rows=288 width=26) (actual time=0.080..0.323 rows=288.00 loops=1)
+                                      Hash Cond: (o.lecturer_id = l.lecturer_id)
+                                      Buffers: shared hit=58
+                                      ->  Hash Join  (cost=1.13..101.97 rows=288 width=8) (actual time=0.050..0.263 rows=288.00 loops=1)
+                                            Hash Cond: (o.semester_id = sem.semester_id)
+                                            Buffers: shared hit=55
+                                            ->  Seq Scan on course_offering o  (cost=0.00..88.56 rows=3456 width=10) (actual time=0.003..0.105 rows=3456.00 loops=1)
+                                                  Buffers: shared hit=54
+                                            ->  Hash  (cost=1.12..1.12 rows=1 width=2) (actual time=0.003..0.003 rows=1.00 loops=1)
+                                                  Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                  Buffers: shared hit=1
+                                                  ->  Seq Scan on semester sem  (cost=0.00..1.12 rows=1 width=2) (actual time=0.002..0.002 rows=1.00 loops=1)
+                                                        Filter: registration_open
+                                                        Rows Removed by Filter: 11
+                                                        Buffers: shared hit=1
+                                      ->  Hash  (cost=4.80..4.80 rows=180 width=22) (actual time=0.029..0.029 rows=180.00 loops=1)
+                                            Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                                            Buffers: shared hit=3
+                                            ->  Seq Scan on lecturer l  (cost=0.00..4.80 rows=180 width=22) (actual time=0.002..0.014 rows=180.00 loops=1)
+                                                  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=11
+Planning Time: 0.194 ms
+Execution Time: 86.879 ms

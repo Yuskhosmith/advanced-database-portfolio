@@ -1,0 +1,82 @@
+-- Q01 Student transcript (point lookup)
+-- file: sql/queries/q01_student_transcript.sql
+-- phase: optimised
+
+SELECT ses.name AS session, sem.term, c.course_code, c.title, c.credit_units AS cu,
+       e.total_score AS total, g.grade_letter AS grade, g.grade_point AS gp
+FROM student s
+JOIN enrollment e          ON e.student_id    = s.student_id
+JOIN course_offering o     ON o.offering_id   = e.offering_id
+JOIN course c              ON c.course_id     = o.course_id
+JOIN semester sem          ON sem.semester_id = o.semester_id
+JOIN academic_session ses  ON ses.session_id  = sem.session_id
+LEFT JOIN grade_scale g    ON g.score_range @> e.total_score
+WHERE s.matric_no = 'AU/2022/00007'
+ORDER BY sem.semester_id, c.course_code;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Incremental Sort  (cost=167.99..181.26 rows=31 width=72) (actual time=0.121..0.143 rows=48.00 loops=1)
+  Sort Key: sem.semester_id, c.course_code
+  Presorted Key: sem.semester_id
+  Full-sort Groups: 2  Sort Method: quicksort  Average Memory: 28kB  Peak Memory: 28kB
+  Buffers: shared hit=298
+  ->  Nested Loop Left Join  (cost=166.84..180.42 rows=31 width=72) (actual time=0.054..0.129 rows=48.00 loops=1)
+        Join Filter: (g.score_range @> e.total_score)
+        Rows Removed by Join Filter: 240
+        Buffers: shared hit=298
+        ->  Nested Loop  (cost=166.84..176.55 rows=31 width=66) (actual time=0.051..0.083 rows=48.00 loops=1)
+              Buffers: shared hit=297
+              ->  Merge Join  (cost=166.56..167.09 rows=31 width=26) (actual time=0.050..0.057 rows=48.00 loops=1)
+                    Merge Cond: (sem.semester_id = o.semester_id)
+                    Buffers: shared hit=153
+                    ->  Sort  (cost=2.52..2.55 rows=12 width=18) (actual time=0.008..0.008 rows=11.00 loops=1)
+                          Sort Key: sem.semester_id
+                          Sort Method: quicksort  Memory: 25kB
+                          Buffers: shared hit=2
+                          ->  Hash Join  (cost=1.14..2.31 rows=12 width=18) (actual time=0.005..0.007 rows=12.00 loops=1)
+                                Hash Cond: (sem.session_id = ses.session_id)
+                                Buffers: shared hit=2
+                                ->  Seq Scan on semester sem  (cost=0.00..1.12 rows=12 width=10) (actual time=0.001..0.002 rows=12.00 loops=1)
+                                      Buffers: shared hit=1
+                                ->  Hash  (cost=1.06..1.06 rows=6 width=12) (actual time=0.002..0.002 rows=6.00 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on academic_session ses  (cost=0.00..1.06 rows=6 width=12) (actual time=0.001..0.001 rows=6.00 loops=1)
+                                            Buffers: shared hit=1
+                    ->  Sort  (cost=164.04..164.12 rows=31 width=10) (actual time=0.041..0.042 rows=48.00 loops=1)
+                          Sort Key: o.semester_id
+                          Sort Method: quicksort  Memory: 26kB
+                          Buffers: shared hit=151
+                          ->  Nested Loop  (cost=5.28..163.27 rows=31 width=10) (actual time=0.007..0.038 rows=48.00 loops=1)
+                                Buffers: shared hit=151
+                                ->  Nested Loop  (cost=5.00..154.03 rows=31 width=8) (actual time=0.006..0.010 rows=48.00 loops=1)
+                                      Buffers: shared hit=7
+                                      ->  Index Scan using student_matric_no_key on student s  (cost=0.29..8.30 rows=1 width=4) (actual time=0.002..0.002 rows=1.00 loops=1)
+                                            Index Cond: ((matric_no)::text = 'AU/2022/00007'::text)
+                                            Index Searches: 1
+                                            Buffers: shared hit=3
+                                      ->  Bitmap Heap Scan on enrollment e  (cost=4.71..145.36 rows=37 width=12) (actual time=0.004..0.005 rows=48.00 loops=1)
+                                            Recheck Cond: (s.student_id = student_id)
+                                            Heap Blocks: exact=1
+                                            Buffers: shared hit=4
+                                            ->  Bitmap Index Scan on enrollment_student_id_offering_id_key  (cost=0.00..4.70 rows=37 width=0) (actual time=0.002..0.002 rows=48.00 loops=1)
+                                                  Index Cond: (student_id = s.student_id)
+                                                  Index Searches: 1
+                                                  Buffers: shared hit=3
+                                ->  Index Scan using course_offering_pkey on course_offering o  (cost=0.28..0.30 rows=1 width=10) (actual time=0.000..0.000 rows=1.00 loops=48)
+                                      Index Cond: (offering_id = e.offering_id)
+                                      Index Searches: 48
+                                      Buffers: shared hit=144
+              ->  Index Scan using course_pkey on course c  (cost=0.28..0.31 rows=1 width=48) (actual time=0.000..0.000 rows=1.00 loops=48)
+                    Index Cond: (course_id = o.course_id)
+                    Index Searches: 48
+                    Buffers: shared hit=144
+        ->  Materialize  (cost=0.00..1.09 rows=6 width=21) (actual time=0.000..0.000 rows=6.00 loops=48)
+              Storage: Memory  Maximum Storage: 17kB
+              Buffers: shared hit=1
+              ->  Seq Scan on grade_scale g  (cost=0.00..1.06 rows=6 width=21) (actual time=0.001..0.001 rows=6.00 loops=1)
+                    Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=46
+Planning Time: 0.628 ms
+Execution Time: 0.160 ms

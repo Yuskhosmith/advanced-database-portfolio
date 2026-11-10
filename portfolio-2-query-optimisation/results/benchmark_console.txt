@@ -1,0 +1,121 @@
+Resetting to baseline physical design
+  baseline  Q01   Student transcript (point lookup) ...
+  baseline  Q02   Course broadsheet ...
+  baseline  Q03   Top 3 per department (Dean's list) ...
+  baseline  Q04   Probation list (CSC) ...
+  baseline  Q05   Pass rate per course 2025/2026 ...
+  baseline  Q06   Lecturer workload (current semester) ...
+  baseline  Q07   Name prefix search ...
+  baseline  Q08   Pending results for a lecturer ...
+  baseline  Q09a  First-class list, row-by-row fn_cgpa() ...
+  baseline  Q09b  First-class list, set-based rewrite ...
+  baseline  Q10   2024 cohort registrations (correlated columns) ...
+Applying optimisations
+  optimised Q01   Student transcript (point lookup) ...
+  optimised Q02   Course broadsheet ...
+  optimised Q03   Top 3 per department (Dean's list) ...
+  optimised Q04   Probation list (CSC) ...
+  optimised Q05   Pass rate per course 2025/2026 ...
+  optimised Q06   Lecturer workload (current semester) ...
+  optimised Q07   Name prefix search ...
+  optimised Q08   Pending results for a lecturer ...
+  optimised Q09a  First-class list, row-by-row fn_cgpa() ...
+  optimised Q09b  First-class list, set-based rewrite ...
+  optimised Q10   2024 cohort registrations (correlated columns) ...
+# Benchmark summary
+
+- Server: `PostgreSQL 18.3 (Homebrew) on aarch64-apple-darwin25.2.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit`
+- shared_buffers = 128MB, jit = on; warm cache; median of 5 runs after 1 warm-up
+
+| Query | Description | Baseline (ms) | Optimised (ms) | Speed-up | Buffers before → after |
+|---|---|---:|---:|---:|---|
+| Q01 | Student transcript (point lookup) | 0.16 | 0.17 | 1.0× | 298 → 298 |
+| Q02 | Course broadsheet | 8.23 | 0.83 | 10.0× | 3,960 → 1,179 |
+| Q03 | Top 3 per department (Dean's list) | 245.39 | 5.84 | 42.0× | 8,666 → 192 |
+| Q04 | Probation list (CSC) | 43.12 | 42.30 | 1.0× | 131,002 → 131,004 |
+| Q05 | Pass rate per course 2025/2026 | 31.52 | 15.67 | 2.0× | 7,686 → 854 |
+| Q06 | Lecturer workload (current semester) | 86.09 | 27.78 | 3.1× | 7,522 → 46,582 |
+| Q07 | Name prefix search | 2.28 | 0.02 | 119.9× | 349 → 20 |
+| Q08 | Pending results for a lecturer | 17.05 | 0.40 | 42.4× | 8,486 → 1,090 |
+| Q09a | First-class list, row-by-row fn_cgpa() | 1376.92 | 126.36 | 10.9× | 3,518,612 → 338,776 |
+| Q09b | First-class list, set-based rewrite | 95.80 | 93.83 | 1.0× | 295,376 → 295,378 |
+| Q10 | 2024 cohort registrations (correlated columns) | 19.93 | 19.05 | 1.0× | 8,708 → 8,708 |
+
+## Access paths chosen by the planner
+
+**Q01 – Student transcript (point lookup)**
+
+- before: Nested Loop; Merge Join; Hash Join; Seq Scan on semester; Seq Scan on academic_session; Index Scan using student_matric_no_key on student; Bitmap Heap Scan on enrollment; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course; Seq Scan on grade_scale
+- after:  Nested Loop; Merge Join; Hash Join; Seq Scan on semester; Seq Scan on academic_session; Index Scan using student_matric_no_key on student; Bitmap Heap Scan on enrollment; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course; Seq Scan on grade_scale
+
+**Q02 – Course broadsheet**
+
+- before: Nested Loop; Index Scan using course_course_code_key on course; Hash Join; Seq Scan on semester; Seq Scan on academic_session; Index Scan using course_offering_course_id_semester_id_key on course_offering; Index Scan using enrollment_student_id_offering_id_key on enrollment; Index Scan using student_pkey on student; Seq Scan on grade_scale
+- after:  Nested Loop; Index Scan using course_course_code_key on course; Hash Join; Seq Scan on semester; Seq Scan on academic_session; Index Scan using course_offering_course_id_semester_id_key on course_offering; Index Scan using idx_enrollment_offering_cover on enrollment; Index Scan using student_pkey on student; Seq Scan on grade_scale
+
+**Q03 – Top 3 per department (Dean's list)**
+
+- before: Hash Join; Seq Scan on student; Nested Loop; Seq Scan on enrollment; Index Scan using grade_scale_score_range_excl on grade_scale; Seq Scan on course_offering; Seq Scan on course; Seq Scan on programme; Seq Scan on department
+- after:  Seq Scan on mv_student_cgpa
+
+**Q04 – Probation list (CSC)**
+
+- before: Nested Loop; Hash Join; Seq Scan on student; Seq Scan on programme; Seq Scan on department; Index Scan using enrollment_student_id_offering_id_key on enrollment; Index Scan using grade_scale_score_range_excl on grade_scale; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course
+- after:  Nested Loop; Hash Join; Seq Scan on programme; Seq Scan on department; Bitmap Heap Scan on student; Index Scan using enrollment_student_id_offering_id_key on enrollment; Index Scan using grade_scale_score_range_excl on grade_scale; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course
+
+**Q05 – Pass rate per course 2025/2026**
+
+- before: Hash Join; Seq Scan on enrollment; Seq Scan on course_offering; Seq Scan on semester; Seq Scan on academic_session; Seq Scan on course; Seq Scan on department
+- after:  Nested Loop; Hash Join; Seq Scan on semester; Seq Scan on academic_session; Index Scan using idx_offering_semester on course_offering; Seq Scan on course; Seq Scan on department; Index Only Scan using idx_enrollment_offering_cover on enrollment
+
+**Q06 – Lecturer workload (current semester)**
+
+- before: Hash Join; Seq Scan on enrollment; Seq Scan on course_offering; Seq Scan on semester; Seq Scan on lecturer
+- after:  Nested Loop; Index Scan using lecturer_staff_no_key on lecturer; Index Scan using idx_offering_lecturer on course_offering; Seq Scan on semester; Index Scan using idx_enrollment_offering_cover on enrollment
+
+**Q07 – Name prefix search**
+
+- before: Seq Scan on student
+- after:  Bitmap Heap Scan on student
+
+**Q08 – Pending results for a lecturer**
+
+- before: Seq Scan on lecturer; Nested Loop; Hash Join; Seq Scan on enrollment; Seq Scan on course_offering; Seq Scan on course; Index Scan using student_pkey on student
+- after:  Seq Scan on lecturer; Nested Loop; Hash Join; Bitmap Heap Scan on course_offering; Index Scan using idx_enrollment_pending on enrollment; Seq Scan on course; Index Scan using student_pkey on student
+
+**Q09a – First-class list, row-by-row fn_cgpa()**
+
+- before: Hash Join; Seq Scan on student; Seq Scan on programme; Seq Scan on department
+- after:  Nested Loop; Hash Join; Seq Scan on programme; Seq Scan on department; Bitmap Heap Scan on student
+
+**Q09b – First-class list, set-based rewrite**
+
+- before: Nested Loop; Hash Join; Seq Scan on student; Seq Scan on programme; Seq Scan on department; Index Scan using enrollment_student_id_offering_id_key on enrollment; Index Scan using grade_scale_score_range_excl on grade_scale; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course
+- after:  Nested Loop; Hash Join; Seq Scan on programme; Seq Scan on department; Bitmap Heap Scan on student; Index Scan using enrollment_student_id_offering_id_key on enrollment; Index Scan using grade_scale_score_range_excl on grade_scale; Index Scan using course_offering_pkey on course_offering; Index Scan using course_pkey on course
+
+**Q10 – 2024 cohort registrations (correlated columns)**
+
+- before: Hash Join; Seq Scan on enrollment; Seq Scan on student; Seq Scan on course_offering; Seq Scan on course
+- after:  Hash Join; Seq Scan on enrollment; Seq Scan on student; Seq Scan on course_offering; Seq Scan on course
+
+## Planner row estimates for `student` scans (Q10, correlated columns)
+
+| Phase | Node | Estimated rows | Actual rows |
+|---|---|---:|---:|
+| baseline | Seq Scan | 555 | 3,333.0 |
+| optimised | Seq Scan | 3,333 | 3,333.0 |
+
+## Index sizes and usage after the benchmark
+
+| Table | Index | Size | Index scans |
+|---|---|---:|---:|
+| enrollment | idx_enrollment_offering_cover | 24 MB | 3,459 |
+| enrollment | enrollment_student_id_offering_id_key | 22 MB | 187,164 |
+| enrollment | enrollment_pkey | 13 MB | 5 |
+| enrollment | idx_enrollment_pending | 392 kB | 133 |
+| mv_student_cgpa | ux_mv_student_cgpa | 384 kB | 0 |
+| mv_student_cgpa | idx_mv_cgpa_dept | 296 kB | 0 |
+| student | idx_student_lower_name | 216 kB | 7 |
+| student | idx_student_programme | 160 kB | 16 |
+| course_offering | idx_offering_lecturer | 48 kB | 1,281 |
+| course_offering | idx_offering_semester | 40 kB | 14 |

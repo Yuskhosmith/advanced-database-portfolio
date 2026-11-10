@@ -1,0 +1,55 @@
+-- Q08 Pending results for a lecturer
+-- file: sql/queries/q08_pending_results_for_lecturer.sql
+-- phase: optimised
+
+SELECT c.course_code, s.matric_no, e.ca_score, e.exam_score
+FROM course_offering o
+JOIN course c     ON c.course_id    = o.course_id
+JOIN enrollment e ON e.offering_id  = o.offering_id
+JOIN student s    ON s.student_id   = e.student_id
+WHERE o.lecturer_id = (SELECT lecturer_id FROM lecturer WHERE staff_no = 'SP/00001')
+  AND e.result_status = 'PENDING'
+ORDER BY c.course_code, s.matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=1874.85..1875.56 rows=282 width=29) (actual time=0.364..0.368 rows=268.00 loops=1)
+  Sort Key: c.course_code, s.matric_no
+  Sort Method: quicksort  Memory: 35kB
+  Buffers: shared hit=1090
+  InitPlan 1
+    ->  Seq Scan on lecturer  (cost=0.00..5.25 rows=1 width=4) (actual time=0.002..0.008 rows=1.00 loops=1)
+          Filter: ((staff_no)::text = 'SP/00001'::text)
+          Rows Removed by Filter: 179
+          Buffers: shared hit=3
+  ->  Nested Loop  (cost=24.96..1858.12 rows=282 width=29) (actual time=0.083..0.324 rows=268.00 loops=1)
+        Buffers: shared hit=1090
+        ->  Hash Join  (cost=24.68..1763.18 rows=282 width=19) (actual time=0.082..0.161 rows=268.00 loops=1)
+              Hash Cond: (o.course_id = c.course_id)
+              Buffers: shared hit=286
+              ->  Nested Loop  (cost=4.72..1742.48 rows=282 width=16) (actual time=0.023..0.075 rows=268.00 loops=1)
+                    Buffers: shared hit=279
+                    ->  Bitmap Heap Scan on course_offering o  (cost=4.43..44.05 rows=19 width=8) (actual time=0.012..0.014 rows=19.00 loops=1)
+                          Recheck Cond: (lecturer_id = (InitPlan 1).col1)
+                          Heap Blocks: exact=14
+                          Buffers: shared hit=19
+                          ->  Bitmap Index Scan on idx_offering_lecturer  (cost=0.00..4.42 rows=19 width=0) (actual time=0.010..0.010 rows=19.00 loops=1)
+                                Index Cond: (lecturer_id = (InitPlan 1).col1)
+                                Index Searches: 1
+                                Buffers: shared hit=5
+                    ->  Index Scan using idx_enrollment_pending on enrollment e  (cost=0.29..89.16 rows=23 width=16) (actual time=0.000..0.002 rows=14.11 loops=19)
+                          Index Cond: (offering_id = o.offering_id)
+                          Index Searches: 19
+                          Buffers: shared hit=260
+              ->  Hash  (cost=12.76..12.76 rows=576 width=11) (actual time=0.057..0.057 rows=576.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 33kB
+                    Buffers: shared hit=7
+                    ->  Seq Scan on course c  (cost=0.00..12.76 rows=576 width=11) (actual time=0.001..0.024 rows=576.00 loops=1)
+                          Buffers: shared hit=7
+        ->  Index Scan using student_pkey on student s  (cost=0.29..0.34 rows=1 width=18) (actual time=0.000..0.000 rows=1.00 loops=268)
+              Index Cond: (student_id = e.student_id)
+              Index Searches: 268
+              Buffers: shared hit=804
+Planning:
+  Buffers: shared hit=38
+Planning Time: 0.173 ms
+Execution Time: 0.384 ms

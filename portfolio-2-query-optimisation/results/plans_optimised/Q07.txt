@@ -1,0 +1,24 @@
+-- Q07 Name prefix search
+-- file: sql/queries/q07_student_name_search.sql
+-- phase: optimised
+
+SELECT matric_no, first_name, last_name, current_level, status
+FROM student
+WHERE lower(last_name) LIKE 'okon%' AND lower(first_name) LIKE 'chi%'
+ORDER BY matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=65.03..65.08 rows=18 width=37) (actual time=0.015..0.015 rows=18.00 loops=1)
+  Sort Key: matric_no
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=20
+  ->  Bitmap Heap Scan on student  (cost=4.56..64.66 rows=18 width=37) (actual time=0.005..0.012 rows=18.00 loops=1)
+        Filter: ((lower((last_name)::text) ~~ 'okon%'::text) AND (lower((first_name)::text) ~~ 'chi%'::text))
+        Heap Blocks: exact=18
+        Buffers: shared hit=20
+        ->  Bitmap Index Scan on idx_student_lower_name  (cost=0.00..4.56 rows=18 width=0) (actual time=0.003..0.003 rows=18.00 loops=1)
+              Index Cond: ((lower((last_name)::text) ~>=~ 'okon'::text) AND (lower((last_name)::text) ~<~ 'okoo'::text) AND (lower((first_name)::text) ~>=~ 'chi'::text) AND (lower((first_name)::text) ~<~ 'chj'::text))
+              Index Searches: 1
+              Buffers: shared hit=2
+Planning Time: 0.026 ms
+Execution Time: 0.018 ms

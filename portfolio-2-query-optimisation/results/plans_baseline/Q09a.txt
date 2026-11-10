@@ -1,0 +1,42 @@
+-- Q09a First-class list, row-by-row fn_cgpa()
+-- file: sql/queries/q09_first_class_rbar.sql
+-- phase: baseline
+
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student, fn_cgpa(s.student_id) AS cgpa
+FROM student s
+JOIN programme p ON p.programme_id = s.programme_id
+JOIN department d ON d.department_id = p.department_id
+WHERE d.code = 'CSC' AND fn_cgpa(s.student_id) >= 4.5
+ORDER BY cgpa DESC, s.matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=5799.03..5800.42 rows=556 width=78) (actual time=1367.154..1367.160 rows=207.00 loops=1)
+  Sort Key: (fn_cgpa(s.student_id)) DESC, s.matric_no
+  Sort Method: quicksort  Memory: 36kB
+  Buffers: shared hit=3518612
+  ->  Hash Join  (cost=2.34..5773.68 rows=556 width=78) (actual time=2.082..1367.035 rows=207.00 loops=1)
+        Hash Cond: (s.programme_id = p.programme_id)
+        Buffers: shared hit=3518612
+        ->  Seq Scan on student s  (cost=0.00..5599.00 rows=6667 width=33) (actual time=0.127..1350.731 rows=2291.00 loops=1)
+              Filter: (fn_cgpa(student_id) >= 4.5)
+              Rows Removed by Filter: 17709
+              Buffers: shared hit=3475733
+        ->  Hash  (cost=2.33..2.33 rows=1 width=2) (actual time=0.008..0.008 rows=1.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+              Buffers: shared hit=2
+              ->  Hash Join  (cost=1.16..2.33 rows=1 width=2) (actual time=0.007..0.008 rows=1.00 loops=1)
+                    Hash Cond: (p.department_id = d.department_id)
+                    Buffers: shared hit=2
+                    ->  Seq Scan on programme p  (cost=0.00..1.12 rows=12 width=4) (actual time=0.001..0.001 rows=12.00 loops=1)
+                          Buffers: shared hit=1
+                    ->  Hash  (cost=1.15..1.15 rows=1 width=2) (actual time=0.004..0.004 rows=1.00 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on department d  (cost=0.00..1.15 rows=1 width=2) (actual time=0.002..0.002 rows=1.00 loops=1)
+                                Filter: (code = 'CSC'::bpchar)
+                                Rows Removed by Filter: 11
+                                Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=12
+Planning Time: 0.169 ms
+Execution Time: 1367.178 ms

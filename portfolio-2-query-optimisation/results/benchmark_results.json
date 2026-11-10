@@ -1,0 +1,1276 @@
+{
+  "server": "PostgreSQL 18.3 (Homebrew) on aarch64-apple-darwin25.2.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit",
+  "shared_buffers": "128MB",
+  "jit": "on",
+  "runs": 5,
+  "baseline": {
+    "Q01": {
+      "median_exec_ms": 0.164,
+      "min_exec_ms": 0.159,
+      "max_exec_ms": 0.17,
+      "median_plan_ms": 0.575,
+      "rows_returned": 48.0,
+      "total_cost": 181.26,
+      "shared_hit": 298,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Merge Join",
+        "Hash Join",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Index Scan using student_matric_no_key on student",
+        "Bitmap Heap Scan on enrollment",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course",
+        "Seq Scan on grade_scale"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "enrollment",
+          "estimated": 37,
+          "actual": 48.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 48
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 48
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "grade_scale",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        }
+      ],
+      "title": "Student transcript (point lookup)",
+      "file": "q01_student_transcript.sql"
+    },
+    "Q02": {
+      "median_exec_ms": 8.23,
+      "min_exec_ms": 8.126,
+      "max_exec_ms": 8.608,
+      "median_plan_ms": 0.607,
+      "rows_returned": 292.0,
+      "total_cost": 4724.62,
+      "shared_hit": 3960,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Index Scan using course_course_code_key on course",
+        "Hash Join",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Index Scan using course_offering_course_id_semester_id_key on course_offering",
+        "Index Scan using enrollment_student_id_offering_id_key on enrollment",
+        "Index Scan using student_pkey on student",
+        "Seq Scan on grade_scale"
+      ],
+      "estimates": [
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 0.5,
+          "loops": 2
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 278,
+          "actual": 292.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 292
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "grade_scale",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        }
+      ],
+      "title": "Course broadsheet",
+      "file": "q02_course_broadsheet.sql"
+    },
+    "Q03": {
+      "median_exec_ms": 245.389,
+      "min_exec_ms": 245.117,
+      "max_exec_ms": 261.762,
+      "median_plan_ms": 0.355,
+      "rows_returned": 159.0,
+      "total_cost": 19329.13,
+      "shared_hit": 8666,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on student",
+        "Nested Loop",
+        "Seq Scan on enrollment",
+        "Index Scan using grade_scale_score_range_excl on grade_scale",
+        "Seq Scan on course_offering",
+        "Seq Scan on course",
+        "Seq Scan on programme",
+        "Seq Scan on department"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 12527,
+          "actual": 12527.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 213422,
+          "actual": 186676.0,
+          "loops": 3
+        },
+        {
+          "node": "Index Scan",
+          "relation": "grade_scale",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 302
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 3456,
+          "actual": 3456.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        }
+      ],
+      "title": "Top 3 per department (Dean's list)",
+      "file": "q03_top_students_per_department.sql"
+    },
+    "Q04": {
+      "median_exec_ms": 43.123,
+      "min_exec_ms": 43.021,
+      "max_exec_ms": 43.182,
+      "median_plan_ms": 0.498,
+      "rows_returned": 76.0,
+      "total_cost": 6667.43,
+      "shared_hit": 131002,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on student",
+        "Seq Scan on programme",
+        "Seq Scan on department",
+        "Index Scan using enrollment_student_id_offering_id_key on enrollment",
+        "Index Scan using grade_scale_score_range_excl on grade_scale",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 13333,
+          "actual": 13333.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 34,
+          "actual": 17.74,
+          "loops": 1168
+        },
+        {
+          "node": "Index Scan",
+          "relation": "grade_scale",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 96
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 20724
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 20724
+        }
+      ],
+      "title": "Probation list (CSC)",
+      "file": "q04_probation_list.sql"
+    },
+    "Q05": {
+      "median_exec_ms": 31.525,
+      "min_exec_ms": 31.218,
+      "max_exec_ms": 109.357,
+      "median_plan_ms": 0.393,
+      "rows_returned": 192.0,
+      "total_cost": 13522.88,
+      "shared_hit": 7686,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on enrollment",
+        "Seq Scan on course_offering",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Seq Scan on course",
+        "Seq Scan on department"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 233545,
+          "actual": 186676.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 3456,
+          "actual": 3456.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 4,
+          "actual": 4.0,
+          "loops": 3
+        }
+      ],
+      "title": "Pass rate per course 2025/2026",
+      "file": "q05_pass_rate_by_course.sql"
+    },
+    "Q06": {
+      "median_exec_ms": 86.088,
+      "min_exec_ms": 85.79,
+      "max_exec_ms": 86.639,
+      "median_plan_ms": 0.203,
+      "rows_returned": 10.0,
+      "total_cost": 22826.33,
+      "shared_hit": 7522,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on enrollment",
+        "Seq Scan on course_offering",
+        "Seq Scan on semester",
+        "Seq Scan on lecturer"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 613360,
+          "actual": 613360.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 3456,
+          "actual": 3456.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "lecturer",
+          "estimated": 180,
+          "actual": 180.0,
+          "loops": 1
+        }
+      ],
+      "title": "Lecturer workload (current semester)",
+      "file": "q06_lecturer_workload.sql"
+    },
+    "Q07": {
+      "median_exec_ms": 2.279,
+      "min_exec_ms": 2.276,
+      "max_exec_ms": 2.32,
+      "median_plan_ms": 0.011,
+      "rows_returned": 18.0,
+      "total_cost": 749.01,
+      "shared_hit": 349,
+      "shared_read": 0,
+      "access_paths": [
+        "Seq Scan on student"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 18.0,
+          "loops": 1
+        }
+      ],
+      "title": "Name prefix search",
+      "file": "q07_student_name_search.sql"
+    },
+    "Q08": {
+      "median_exec_ms": 17.051,
+      "min_exec_ms": 16.991,
+      "max_exec_ms": 17.14,
+      "median_plan_ms": 0.217,
+      "rows_returned": 268.0,
+      "total_cost": 11918.03,
+      "shared_hit": 8486,
+      "shared_read": 0,
+      "access_paths": [
+        "Seq Scan on lecturer",
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on enrollment",
+        "Seq Scan on course_offering",
+        "Seq Scan on course",
+        "Index Scan using student_pkey on student"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "lecturer",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 22021,
+          "actual": 17777.33,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 19,
+          "actual": 19.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 3
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 268
+        }
+      ],
+      "title": "Pending results for a lecturer",
+      "file": "q08_pending_results_for_lecturer.sql"
+    },
+    "Q09a": {
+      "median_exec_ms": 1376.923,
+      "min_exec_ms": 1297.171,
+      "max_exec_ms": 1670.878,
+      "median_plan_ms": 0.166,
+      "rows_returned": 207.0,
+      "total_cost": 5800.42,
+      "shared_hit": 3518612,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on student",
+        "Seq Scan on programme",
+        "Seq Scan on department"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 6667,
+          "actual": 2291.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        }
+      ],
+      "title": "First-class list, row-by-row fn_cgpa()",
+      "file": "q09_first_class_rbar.sql"
+    },
+    "Q09b": {
+      "median_exec_ms": 95.8,
+      "min_exec_ms": 95.364,
+      "max_exec_ms": 99.001,
+      "median_plan_ms": 0.519,
+      "rows_returned": 207.0,
+      "total_cost": 7928.96,
+      "shared_hit": 295376,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on student",
+        "Seq Scan on programme",
+        "Seq Scan on department",
+        "Index Scan using enrollment_student_id_offering_id_key on enrollment",
+        "Index Scan using grade_scale_score_range_excl on grade_scale",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 20000,
+          "actual": 20000.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 31,
+          "actual": 27.55,
+          "loops": 1728
+        },
+        {
+          "node": "Index Scan",
+          "relation": "grade_scale",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 97
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 47604
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 47604
+        }
+      ],
+      "title": "First-class list, set-based rewrite",
+      "file": "q09_first_class_setbased.sql"
+    },
+    "Q10": {
+      "median_exec_ms": 19.934,
+      "min_exec_ms": 19.534,
+      "max_exec_ms": 20.505,
+      "median_plan_ms": 0.238,
+      "rows_returned": 48.0,
+      "total_cost": 12738.1,
+      "shared_hit": 8708,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on enrollment",
+        "Seq Scan on student",
+        "Seq Scan on course_offering",
+        "Seq Scan on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 22021,
+          "actual": 17777.33,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 555,
+          "actual": 3333.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 3456,
+          "actual": 3456.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 3
+        }
+      ],
+      "title": "2024 cohort registrations (correlated columns)",
+      "file": "q10_cohort_registrations.sql"
+    }
+  },
+  "optimised": {
+    "Q01": {
+      "median_exec_ms": 0.166,
+      "min_exec_ms": 0.16,
+      "max_exec_ms": 0.202,
+      "median_plan_ms": 0.67,
+      "rows_returned": 48.0,
+      "total_cost": 181.26,
+      "shared_hit": 298,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Merge Join",
+        "Hash Join",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Index Scan using student_matric_no_key on student",
+        "Bitmap Heap Scan on enrollment",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course",
+        "Seq Scan on grade_scale"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "enrollment",
+          "estimated": 37,
+          "actual": 48.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 48
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 48
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "grade_scale",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        }
+      ],
+      "title": "Student transcript (point lookup)",
+      "file": "q01_student_transcript.sql"
+    },
+    "Q02": {
+      "median_exec_ms": 0.826,
+      "min_exec_ms": 0.649,
+      "max_exec_ms": 1.015,
+      "median_plan_ms": 0.608,
+      "rows_returned": 292.0,
+      "total_cost": 126.8,
+      "shared_hit": 1179,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Index Scan using course_course_code_key on course",
+        "Hash Join",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Index Scan using course_offering_course_id_semester_id_key on course_offering",
+        "Index Scan using idx_enrollment_offering_cover on enrollment",
+        "Index Scan using student_pkey on student",
+        "Seq Scan on grade_scale"
+      ],
+      "estimates": [
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 0.5,
+          "loops": 2
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 278,
+          "actual": 292.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 292
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "grade_scale",
+          "estimated": 6,
+          "actual": 6.0,
+          "loops": 1
+        }
+      ],
+      "title": "Course broadsheet",
+      "file": "q02_course_broadsheet.sql"
+    },
+    "Q03": {
+      "median_exec_ms": 5.841,
+      "min_exec_ms": 5.786,
+      "max_exec_ms": 6.103,
+      "median_plan_ms": 0.027,
+      "rows_returned": 159.0,
+      "total_cost": 1909.67,
+      "shared_hit": 192,
+      "shared_read": 0,
+      "access_paths": [
+        "Seq Scan on mv_student_cgpa"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "mv_student_cgpa",
+          "estimated": 9194,
+          "actual": 9194.0,
+          "loops": 1
+        }
+      ],
+      "title": "Top 3 per department (Dean's list)",
+      "file": "q03_top_students_per_department_optimised.sql"
+    },
+    "Q04": {
+      "median_exec_ms": 42.3,
+      "min_exec_ms": 41.252,
+      "max_exec_ms": 42.672,
+      "median_plan_ms": 0.643,
+      "rows_returned": 76.0,
+      "total_cost": 6157.8,
+      "shared_hit": 131004,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on programme",
+        "Seq Scan on department",
+        "Bitmap Heap Scan on student",
+        "Index Scan using enrollment_student_id_offering_id_key on enrollment",
+        "Index Scan using grade_scale_score_range_excl on grade_scale",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "student",
+          "estimated": 1111,
+          "actual": 1168.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 34,
+          "actual": 17.74,
+          "loops": 1168
+        },
+        {
+          "node": "Index Scan",
+          "relation": "grade_scale",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 96
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 20724
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 20724
+        }
+      ],
+      "title": "Probation list (CSC)",
+      "file": "q04_probation_list.sql"
+    },
+    "Q05": {
+      "median_exec_ms": 15.669,
+      "min_exec_ms": 15.55,
+      "max_exec_ms": 15.92,
+      "median_plan_ms": 0.416,
+      "rows_returned": 192.0,
+      "total_cost": 2952.64,
+      "shared_hit": 854,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on semester",
+        "Seq Scan on academic_session",
+        "Index Scan using idx_offering_semester on course_offering",
+        "Seq Scan on course",
+        "Seq Scan on department",
+        "Index Only Scan using idx_enrollment_offering_cover on enrollment"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "academic_session",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 288,
+          "actual": 288.0,
+          "loops": 2
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 4,
+          "actual": 4.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Only Scan",
+          "relation": "enrollment",
+          "estimated": 255,
+          "actual": 274.56,
+          "loops": 192
+        }
+      ],
+      "title": "Pass rate per course 2025/2026",
+      "file": "q05_pass_rate_by_course.sql"
+    },
+    "Q06": {
+      "median_exec_ms": 27.779,
+      "min_exec_ms": 27.224,
+      "max_exec_ms": 29.056,
+      "median_plan_ms": 0.261,
+      "rows_returned": 10.0,
+      "total_cost": 9845.48,
+      "shared_hit": 46582,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Index Scan using lecturer_staff_no_key on lecturer",
+        "Index Scan using idx_offering_lecturer on course_offering",
+        "Seq Scan on semester",
+        "Index Scan using idx_enrollment_offering_cover on enrollment"
+      ],
+      "estimates": [
+        {
+          "node": "Index Scan",
+          "relation": "lecturer",
+          "estimated": 180,
+          "actual": 180.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 19,
+          "actual": 19.2,
+          "loops": 180
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "semester",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 278,
+          "actual": 185.18,
+          "loops": 288
+        }
+      ],
+      "title": "Lecturer workload (current semester)",
+      "file": "q06_lecturer_workload.sql"
+    },
+    "Q07": {
+      "median_exec_ms": 0.019,
+      "min_exec_ms": 0.018,
+      "max_exec_ms": 0.026,
+      "median_plan_ms": 0.027,
+      "rows_returned": 18.0,
+      "total_cost": 65.08,
+      "shared_hit": 20,
+      "shared_read": 0,
+      "access_paths": [
+        "Bitmap Heap Scan on student"
+      ],
+      "estimates": [
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "student",
+          "estimated": 18,
+          "actual": 18.0,
+          "loops": 1
+        }
+      ],
+      "title": "Name prefix search",
+      "file": "q07_student_name_search.sql"
+    },
+    "Q08": {
+      "median_exec_ms": 0.402,
+      "min_exec_ms": 0.389,
+      "max_exec_ms": 0.467,
+      "median_plan_ms": 0.194,
+      "rows_returned": 268.0,
+      "total_cost": 1875.56,
+      "shared_hit": 1090,
+      "shared_read": 0,
+      "access_paths": [
+        "Seq Scan on lecturer",
+        "Nested Loop",
+        "Hash Join",
+        "Bitmap Heap Scan on course_offering",
+        "Index Scan using idx_enrollment_pending on enrollment",
+        "Seq Scan on course",
+        "Index Scan using student_pkey on student"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "lecturer",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "course_offering",
+          "estimated": 19,
+          "actual": 19.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 23,
+          "actual": 14.11,
+          "loops": 19
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "student",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 268
+        }
+      ],
+      "title": "Pending results for a lecturer",
+      "file": "q08_pending_results_for_lecturer.sql"
+    },
+    "Q09a": {
+      "median_exec_ms": 126.364,
+      "min_exec_ms": 125.565,
+      "max_exec_ms": 443.481,
+      "median_plan_ms": 0.207,
+      "rows_returned": 207.0,
+      "total_cost": 729.7,
+      "shared_hit": 338776,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on programme",
+        "Seq Scan on department",
+        "Bitmap Heap Scan on student"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "student",
+          "estimated": 556,
+          "actual": 207.0,
+          "loops": 1
+        }
+      ],
+      "title": "First-class list, row-by-row fn_cgpa()",
+      "file": "q09_first_class_rbar.sql"
+    },
+    "Q09b": {
+      "median_exec_ms": 93.835,
+      "min_exec_ms": 93.518,
+      "max_exec_ms": 94.472,
+      "median_plan_ms": 0.605,
+      "rows_returned": 207.0,
+      "total_cost": 7445.55,
+      "shared_hit": 295378,
+      "shared_read": 0,
+      "access_paths": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on programme",
+        "Seq Scan on department",
+        "Bitmap Heap Scan on student",
+        "Index Scan using enrollment_student_id_offering_id_key on enrollment",
+        "Index Scan using grade_scale_score_range_excl on grade_scale",
+        "Index Scan using course_offering_pkey on course_offering",
+        "Index Scan using course_pkey on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "programme",
+          "estimated": 12,
+          "actual": 12.0,
+          "loops": 1
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "department",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 1
+        },
+        {
+          "node": "Bitmap Heap Scan",
+          "relation": "student",
+          "estimated": 1667,
+          "actual": 1728.0,
+          "loops": 1
+        },
+        {
+          "node": "Index Scan",
+          "relation": "enrollment",
+          "estimated": 31,
+          "actual": 27.55,
+          "loops": 1728
+        },
+        {
+          "node": "Index Scan",
+          "relation": "grade_scale",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 97
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course_offering",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 47604
+        },
+        {
+          "node": "Index Scan",
+          "relation": "course",
+          "estimated": 1,
+          "actual": 1.0,
+          "loops": 47604
+        }
+      ],
+      "title": "First-class list, set-based rewrite",
+      "file": "q09_first_class_setbased.sql"
+    },
+    "Q10": {
+      "median_exec_ms": 19.053,
+      "min_exec_ms": 18.78,
+      "max_exec_ms": 19.438,
+      "median_plan_ms": 0.238,
+      "rows_returned": 48.0,
+      "total_cost": 12799.42,
+      "shared_hit": 8708,
+      "shared_read": 0,
+      "access_paths": [
+        "Hash Join",
+        "Seq Scan on enrollment",
+        "Seq Scan on student",
+        "Seq Scan on course_offering",
+        "Seq Scan on course"
+      ],
+      "estimates": [
+        {
+          "node": "Seq Scan",
+          "relation": "enrollment",
+          "estimated": 21357,
+          "actual": 17777.33,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "student",
+          "estimated": 3333,
+          "actual": 3333.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course_offering",
+          "estimated": 3456,
+          "actual": 3456.0,
+          "loops": 3
+        },
+        {
+          "node": "Seq Scan",
+          "relation": "course",
+          "estimated": 576,
+          "actual": 576.0,
+          "loops": 3
+        }
+      ],
+      "title": "2024 cohort registrations (correlated columns)",
+      "file": "q10_cohort_registrations.sql"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+-- Q07 Name prefix search
+-- file: sql/queries/q07_student_name_search.sql
+-- phase: baseline
+
+SELECT matric_no, first_name, last_name, current_level, status
+FROM student
+WHERE lower(last_name) LIKE 'okon%' AND lower(first_name) LIKE 'chi%'
+ORDER BY matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=749.01..749.01 rows=1 width=37) (actual time=2.455..2.455 rows=18.00 loops=1)
+  Sort Key: matric_no
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=349
+  ->  Seq Scan on student  (cost=0.00..749.00 rows=1 width=37) (actual time=0.187..2.449 rows=18.00 loops=1)
+        Filter: ((lower((last_name)::text) ~~ 'okon%'::text) AND (lower((first_name)::text) ~~ 'chi%'::text))
+        Rows Removed by Filter: 19982
+        Buffers: shared hit=349
+Planning Time: 0.012 ms
+Execution Time: 2.460 ms

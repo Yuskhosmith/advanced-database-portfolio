@@ -1,0 +1,89 @@
+-- Q04 Probation list (CSC)
+-- file: sql/queries/q04_probation_list.sql
+-- phase: baseline
+
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student, s.current_level,
+       round(sum(g.grade_point * c.credit_units) / sum(c.credit_units), 2) AS cgpa
+FROM department d
+JOIN programme p       ON p.department_id = d.department_id
+JOIN student s         ON s.programme_id  = p.programme_id
+JOIN enrollment e      ON e.student_id    = s.student_id
+JOIN course_offering o ON o.offering_id   = e.offering_id
+JOIN course c          ON c.course_id     = o.course_id
+JOIN grade_scale g     ON g.score_range @> e.total_score
+WHERE d.code = 'CSC' AND s.status IN ('ACTIVE','PROBATION') AND e.status = 'COMPLETED'
+GROUP BY s.student_id, s.matric_no, s.first_name, s.last_name, s.current_level
+HAVING sum(g.grade_point * c.credit_units) / sum(c.credit_units) < 1.5
+ORDER BY cgpa;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=6667.27..6667.43 rows=62 width=97) (actual time=42.986..42.989 rows=76.00 loops=1)
+  Sort Key: (round((sum((g.grade_point * (c.credit_units)::numeric)) / (sum(c.credit_units))::numeric), 2))
+  Sort Method: quicksort  Memory: 30kB
+  Buffers: shared hit=131002
+  ->  GroupAggregate  (cost=6658.11..6665.43 rows=62 width=97) (actual time=39.612..42.971 rows=76.00 loops=1)
+        Group Key: s.matric_no
+        Filter: ((sum((g.grade_point * (c.credit_units)::numeric)) / (sum(c.credit_units))::numeric) < 1.5)
+        Rows Removed by Filter: 785
+        Buffers: shared hit=131002
+        ->  Sort  (cost=6658.11..6658.58 rows=187 width=39) (actual time=39.567..40.015 rows=20724.00 loops=1)
+              Sort Key: s.matric_no
+              Sort Method: quicksort  Memory: 2017kB
+              Buffers: shared hit=131002
+              ->  Nested Loop  (cost=3.46..6651.05 rows=187 width=39) (actual time=0.020..35.706 rows=20724.00 loops=1)
+                    Buffers: shared hit=131002
+                    ->  Nested Loop  (cost=3.18..6593.97 rows=187 width=41) (actual time=0.019..25.202 rows=20724.00 loops=1)
+                          Buffers: shared hit=68830
+                          ->  Nested Loop  (cost=2.90..6538.24 rows=187 width=41) (actual time=0.018..13.229 rows=20724.00 loops=1)
+                                Buffers: shared hit=6658
+                                ->  Nested Loop  (cost=2.76..5745.54 rows=31136 width=41) (actual time=0.013..8.767 rows=20724.00 loops=1)
+                                      Buffers: shared hit=6466
+                                      ->  Hash Join  (cost=2.34..662.45 rows=1111 width=33) (actual time=0.010..2.540 rows=1168.00 loops=1)
+                                            Hash Cond: (s.programme_id = p.programme_id)
+                                            Buffers: shared hit=351
+                                            ->  Seq Scan on student s  (cost=0.00..599.00 rows=13333 width=35) (actual time=0.003..1.852 rows=13333.00 loops=1)
+                                                  Filter: ((status)::text = ANY ('{ACTIVE,PROBATION}'::text[]))
+                                                  Rows Removed by Filter: 6667
+                                                  Buffers: shared hit=349
+                                            ->  Hash  (cost=2.33..2.33 rows=1 width=2) (actual time=0.006..0.006 rows=1.00 loops=1)
+                                                  Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                  Buffers: shared hit=2
+                                                  ->  Hash Join  (cost=1.16..2.33 rows=1 width=2) (actual time=0.005..0.006 rows=1.00 loops=1)
+                                                        Hash Cond: (p.department_id = d.department_id)
+                                                        Buffers: shared hit=2
+                                                        ->  Seq Scan on programme p  (cost=0.00..1.12 rows=12 width=4) (actual time=0.001..0.001 rows=12.00 loops=1)
+                                                              Buffers: shared hit=1
+                                                        ->  Hash  (cost=1.15..1.15 rows=1 width=2) (actual time=0.002..0.002 rows=1.00 loops=1)
+                                                              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                              Buffers: shared hit=1
+                                                              ->  Seq Scan on department d  (cost=0.00..1.15 rows=1 width=2) (actual time=0.001..0.002 rows=1.00 loops=1)
+                                                                    Filter: (code = 'CSC'::bpchar)
+                                                                    Rows Removed by Filter: 11
+                                                                    Buffers: shared hit=1
+                                      ->  Index Scan using enrollment_student_id_offering_id_key on enrollment e  (cost=0.42..4.24 rows=34 width=12) (actual time=0.002..0.004 rows=17.74 loops=1168)
+                                            Index Cond: (student_id = s.student_id)
+                                            Filter: ((status)::text = 'COMPLETED'::text)
+                                            Rows Removed by Filter: 4
+                                            Index Searches: 1168
+                                            Buffers: shared hit=6115
+                                ->  Memoize  (cost=0.14..0.16 rows=1 width=19) (actual time=0.000..0.000 rows=1.00 loops=20724)
+                                      Cache Key: e.total_score
+                                      Cache Mode: binary
+                                      Hits: 20628  Misses: 96  Evictions: 0  Overflows: 0  Memory Usage: 12kB
+                                      Buffers: shared hit=192
+                                      ->  Index Scan using grade_scale_score_range_excl on grade_scale g  (cost=0.13..0.15 rows=1 width=19) (actual time=0.001..0.001 rows=1.00 loops=96)
+                                            Index Cond: (score_range @> e.total_score)
+                                            Index Searches: 96
+                                            Buffers: shared hit=192
+                          ->  Index Scan using course_offering_pkey on course_offering o  (cost=0.28..0.30 rows=1 width=8) (actual time=0.000..0.000 rows=1.00 loops=20724)
+                                Index Cond: (offering_id = e.offering_id)
+                                Index Searches: 20724
+                                Buffers: shared hit=62172
+                    ->  Index Scan using course_pkey on course c  (cost=0.28..0.31 rows=1 width=6) (actual time=0.000..0.000 rows=1.00 loops=20724)
+                          Index Cond: (course_id = o.course_id)
+                          Index Searches: 20724
+                          Buffers: shared hit=62172
+Planning:
+  Buffers: shared hit=42
+Planning Time: 0.485 ms
+Execution Time: 43.017 ms

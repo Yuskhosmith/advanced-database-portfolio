@@ -1,0 +1,94 @@
+-- Q05 Pass rate per course 2025/2026
+-- file: sql/queries/q05_pass_rate_by_course.sql
+-- phase: baseline
+
+SELECT c.course_code, sem.term,
+       count(*) AS candidates,
+       round(avg(e.total_score), 1) AS mean_score,
+       round(100.0 * count(*) FILTER (WHERE e.total_score >= 40) / count(*), 1) AS pass_rate_pct
+FROM academic_session ses
+JOIN semester sem      ON sem.session_id = ses.session_id
+JOIN course_offering o ON o.semester_id  = sem.semester_id
+JOIN course c          ON c.course_id    = o.course_id
+JOIN department d      ON d.department_id = c.department_id
+JOIN enrollment e      ON e.offering_id  = o.offering_id
+WHERE ses.name = '2025/2026' AND d.code IN ('CSC','CYB','SEN','IFT') AND e.status = 'COMPLETED'
+GROUP BY c.course_code, sem.term
+ORDER BY pass_rate_pct, c.course_code;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=13520.00..13522.88 rows=1152 width=85) (actual time=31.436..32.147 rows=192.00 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE (e.total_score >= '40'::numeric)))::numeric) / (count(*))::numeric), 1)), c.course_code
+  Sort Method: quicksort  Memory: 35kB
+  Buffers: shared hit=7686
+  ->  Finalize GroupAggregate  (cost=13066.24..13461.42 rows=1152 width=85) (actual time=31.044..32.079 rows=192.00 loops=1)
+        Group Key: c.course_code, sem.term
+        Buffers: shared hit=7686
+        ->  Gather Merge  (cost=13066.24..13388.27 rows=2765 width=61) (actual time=31.034..31.821 rows=576.00 loops=1)
+              Workers Planned: 2
+              Workers Launched: 2
+              Buffers: shared hit=7686
+              ->  Sort  (cost=12066.21..12069.09 rows=1152 width=61) (actual time=29.229..29.237 rows=192.00 loops=3)
+                    Sort Key: c.course_code, sem.term
+                    Sort Method: quicksort  Memory: 46kB
+                    Buffers: shared hit=7686
+                    Worker 0:  Sort Method: quicksort  Memory: 46kB
+                    Worker 1:  Sort Method: quicksort  Memory: 46kB
+                    ->  Partial HashAggregate  (cost=11993.23..12007.63 rows=1152 width=61) (actual time=29.134..29.173 rows=192.00 loops=3)
+                          Group Key: c.course_code, sem.term
+                          Batches: 1  Memory Usage: 129kB
+                          Buffers: shared hit=7656
+                          Worker 0:  Batches: 1  Memory Usage: 129kB
+                          Worker 1:  Batches: 1  Memory Usage: 129kB
+                          ->  Hash Join  (cost=134.48..11798.61 rows=12975 width=17) (actual time=0.649..25.447 rows=17572.00 loops=3)
+                                Hash Cond: (e.offering_id = o.offering_id)
+                                Buffers: shared hit=7656
+                                ->  Parallel Seq Scan on enrollment e  (cost=0.00..10658.58 rows=233545 width=8) (actual time=0.004..13.806 rows=186676.00 loops=3)
+                                      Filter: ((status)::text = 'COMPLETED'::text)
+                                      Rows Removed by Filter: 17777
+                                      Buffers: shared hit=7464
+                                ->  Hash  (cost=132.08..132.08 rows=192 width=17) (actual time=0.620..0.623 rows=192.00 loops=3)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 18kB
+                                      Buffers: shared hit=192
+                                      ->  Hash Join  (cost=20.72..132.08 rows=192 width=17) (actual time=0.489..0.604 rows=192.00 loops=3)
+                                            Hash Cond: (o.course_id = c.course_id)
+                                            Buffers: shared hit=192
+                                            ->  Hash Join  (cost=2.29..109.57 rows=576 width=14) (actual time=0.320..0.428 rows=576.00 loops=3)
+                                                  Hash Cond: (o.semester_id = sem.semester_id)
+                                                  Buffers: shared hit=168
+                                                  ->  Seq Scan on course_offering o  (cost=0.00..88.56 rows=3456 width=10) (actual time=0.025..0.169 rows=3456.00 loops=3)
+                                                        Buffers: shared hit=162
+                                                  ->  Hash  (cost=2.26..2.26 rows=2 width=8) (actual time=0.046..0.048 rows=2.00 loops=3)
+                                                        Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                        Buffers: shared hit=6
+                                                        ->  Hash Join  (cost=1.09..2.26 rows=2 width=8) (actual time=0.044..0.046 rows=2.00 loops=3)
+                                                              Hash Cond: (sem.session_id = ses.session_id)
+                                                              Buffers: shared hit=6
+                                                              ->  Seq Scan on semester sem  (cost=0.00..1.12 rows=12 width=10) (actual time=0.018..0.019 rows=12.00 loops=3)
+                                                                    Buffers: shared hit=3
+                                                              ->  Hash  (cost=1.07..1.07 rows=1 width=2) (actual time=0.023..0.023 rows=1.00 loops=3)
+                                                                    Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                                    Buffers: shared hit=3
+                                                                    ->  Seq Scan on academic_session ses  (cost=0.00..1.07 rows=1 width=2) (actual time=0.020..0.020 rows=1.00 loops=3)
+                                                                          Filter: (name = '2025/2026'::bpchar)
+                                                                          Rows Removed by Filter: 5
+                                                                          Buffers: shared hit=3
+                                            ->  Hash  (cost=16.04..16.04 rows=192 width=11) (actual time=0.125..0.126 rows=192.00 loops=3)
+                                                  Buckets: 1024  Batches: 1  Memory Usage: 17kB
+                                                  Buffers: shared hit=24
+                                                  ->  Hash Join  (cost=1.23..16.04 rows=192 width=11) (actual time=0.046..0.112 rows=192.00 loops=3)
+                                                        Hash Cond: (c.department_id = d.department_id)
+                                                        Buffers: shared hit=24
+                                                        ->  Seq Scan on course c  (cost=0.00..12.76 rows=576 width=13) (actual time=0.019..0.038 rows=576.00 loops=3)
+                                                              Buffers: shared hit=21
+                                                        ->  Hash  (cost=1.18..1.18 rows=4 width=2) (actual time=0.024..0.025 rows=4.00 loops=3)
+                                                              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                              Buffers: shared hit=3
+                                                              ->  Seq Scan on department d  (cost=0.00..1.18 rows=4 width=2) (actual time=0.021..0.023 rows=4.00 loops=3)
+                                                                    Filter: (code = ANY ('{CSC,CYB,SEN,IFT}'::bpchar[]))
+                                                                    Rows Removed by Filter: 8
+                                                                    Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=27
+Planning Time: 0.432 ms
+Execution Time: 32.189 ms

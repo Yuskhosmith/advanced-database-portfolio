@@ -1,0 +1,61 @@
+-- Q08 Pending results for a lecturer
+-- file: sql/queries/q08_pending_results_for_lecturer.sql
+-- phase: baseline
+
+SELECT c.course_code, s.matric_no, e.ca_score, e.exam_score
+FROM course_offering o
+JOIN course c     ON c.course_id    = o.course_id
+JOIN enrollment e ON e.offering_id  = o.offering_id
+JOIN student s    ON s.student_id   = e.student_id
+WHERE o.lecturer_id = (SELECT lecturer_id FROM lecturer WHERE staff_no = 'SP/00001')
+  AND e.result_status = 'PENDING'
+ORDER BY c.course_code, s.matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Gather Merge  (cost=11884.25..11918.03 rows=290 width=29) (actual time=15.980..16.959 rows=268.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=8486
+  InitPlan 1
+    ->  Seq Scan on lecturer  (cost=0.00..5.25 rows=1 width=4) (actual time=0.003..0.010 rows=1.00 loops=1)
+          Filter: ((staff_no)::text = 'SP/00001'::text)
+          Rows Removed by Filter: 179
+          Buffers: shared hit=3
+  ->  Sort  (cost=10878.98..10879.28 rows=121 width=29) (actual time=14.478..14.481 rows=89.33 loops=3)
+        Sort Key: c.course_code, s.matric_no
+        Sort Method: quicksort  Memory: 29kB
+        Buffers: shared hit=8483
+        Worker 0:  Sort Method: quicksort  Memory: 27kB
+        Worker 1:  Sort Method: quicksort  Memory: 28kB
+        ->  Nested Loop  (cost=117.69..10874.79 rows=121 width=29) (actual time=12.106..14.453 rows=89.33 loops=3)
+              Buffers: shared hit=8453
+              ->  Hash Join  (cost=117.40..10834.17 rows=121 width=19) (actual time=12.099..14.277 rows=89.33 loops=3)
+                    Hash Cond: (o.course_id = c.course_id)
+                    Buffers: shared hit=7647
+                    ->  Hash Join  (cost=97.44..10813.89 rows=121 width=16) (actual time=12.011..14.178 rows=89.33 loops=3)
+                          Hash Cond: (e.offering_id = o.offering_id)
+                          Buffers: shared hit=7626
+                          ->  Parallel Seq Scan on enrollment e  (cost=0.00..10658.58 rows=22021 width=16) (actual time=11.765..13.193 rows=17777.33 loops=3)
+                                Filter: ((result_status)::text = 'PENDING'::text)
+                                Rows Removed by Filter: 186676
+                                Buffers: shared hit=7464
+                          ->  Hash  (cost=97.20..97.20 rows=19 width=8) (actual time=0.210..0.210 rows=19.00 loops=3)
+                                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                Buffers: shared hit=162
+                                ->  Seq Scan on course_offering o  (cost=0.00..97.20 rows=19 width=8) (actual time=0.056..0.206 rows=19.00 loops=3)
+                                      Filter: (lecturer_id = (InitPlan 1).col1)
+                                      Rows Removed by Filter: 3437
+                                      Buffers: shared hit=162
+                    ->  Hash  (cost=12.76..12.76 rows=576 width=11) (actual time=0.084..0.084 rows=576.00 loops=3)
+                          Buckets: 1024  Batches: 1  Memory Usage: 33kB
+                          Buffers: shared hit=21
+                          ->  Seq Scan on course c  (cost=0.00..12.76 rows=576 width=11) (actual time=0.019..0.047 rows=576.00 loops=3)
+                                Buffers: shared hit=21
+              ->  Index Scan using student_pkey on student s  (cost=0.29..0.34 rows=1 width=18) (actual time=0.002..0.002 rows=1.00 loops=268)
+                    Index Cond: (student_id = e.student_id)
+                    Index Searches: 268
+                    Buffers: shared hit=806
+Planning:
+  Buffers: shared hit=30
+Planning Time: 0.213 ms
+Execution Time: 16.982 ms

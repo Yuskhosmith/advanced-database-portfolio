@@ -1,0 +1,44 @@
+-- Q09a First-class list, row-by-row fn_cgpa()
+-- file: sql/queries/q09_first_class_rbar.sql
+-- phase: optimised
+
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student, fn_cgpa(s.student_id) AS cgpa
+FROM student s
+JOIN programme p ON p.programme_id = s.programme_id
+JOIN department d ON d.department_id = p.department_id
+WHERE d.code = 'CSC' AND fn_cgpa(s.student_id) >= 4.5
+ORDER BY cgpa DESC, s.matric_no;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=728.31..729.70 rows=556 width=78) (actual time=125.845..125.850 rows=207.00 loops=1)
+  Sort Key: (fn_cgpa(s.student_id)) DESC, s.matric_no
+  Sort Method: quicksort  Memory: 36kB
+  Buffers: shared hit=338776
+  ->  Nested Loop  (cost=19.09..702.96 rows=556 width=78) (actual time=0.503..125.776 rows=207.00 loops=1)
+        Buffers: shared hit=338776
+        ->  Hash Join  (cost=1.16..2.33 rows=1 width=2) (actual time=0.007..0.010 rows=1.00 loops=1)
+              Hash Cond: (p.department_id = d.department_id)
+              Buffers: shared hit=2
+              ->  Seq Scan on programme p  (cost=0.00..1.12 rows=12 width=4) (actual time=0.002..0.003 rows=12.00 loops=1)
+                    Buffers: shared hit=1
+              ->  Hash  (cost=1.15..1.15 rows=1 width=2) (actual time=0.004..0.004 rows=1.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on department d  (cost=0.00..1.15 rows=1 width=2) (actual time=0.002..0.002 rows=1.00 loops=1)
+                          Filter: (code = 'CSC'::bpchar)
+                          Rows Removed by Filter: 11
+                          Buffers: shared hit=1
+        ->  Bitmap Heap Scan on student s  (cost=17.93..553.30 rows=556 width=33) (actual time=0.395..110.327 rows=207.00 loops=1)
+              Recheck Cond: (programme_id = p.programme_id)
+              Filter: (fn_cgpa(student_id) >= 4.5)
+              Rows Removed by Filter: 1521
+              Heap Blocks: exact=348
+              Buffers: shared hit=295897
+              ->  Bitmap Index Scan on idx_student_programme  (cost=0.00..17.79 rows=1667 width=0) (actual time=0.035..0.035 rows=1728.00 loops=1)
+                    Index Cond: (programme_id = p.programme_id)
+                    Index Searches: 1
+                    Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=12
+Planning Time: 0.176 ms
+Execution Time: 125.868 ms

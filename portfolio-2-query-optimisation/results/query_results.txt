@@ -1,0 +1,364 @@
+==================== sql/queries/q01_student_transcript.sql
+-- Q01 Student transcript: every result of one student (portal "My Results" page)
+SELECT ses.name AS session, sem.term, c.course_code, c.title, c.credit_units AS cu,
+  session  |  term  | course_code |                        title                        | cu | total | grade | gp  
+-----------+--------+-------------+-----------------------------------------------------+----+-------+-------+-----
+ 2022/2023 | FIRST  | IFT101      | Foundations of Information Technology I             |  3 |  59.0 | C     | 3.0
+ 2022/2023 | FIRST  | IFT102      | Principles of Information Technology I              |  4 |  72.0 | A     | 5.0
+ 2022/2023 | FIRST  | IFT103      | Methods in Information Technology I                 |  2 |  56.0 | C     | 3.0
+ 2022/2023 | FIRST  | IFT104      | Laboratory Practice in Information Technology I     |  3 |  77.0 | A     | 5.0
+ 2022/2023 | FIRST  | IFT105      | Mathematics for Information Technology I            |  4 |  85.0 | A     | 5.0
+ 2022/2023 | FIRST  | IFT106      | Communication in Information Technology I           |  2 |  72.0 | A     | 5.0
+ 2022/2023 | SECOND | IFT107      | Theory of Information Technology I                  |  3 |  44.0 | E     | 1.0
+ 2022/2023 | SECOND | IFT108      | Applied Information Technology I                    |  4 |  53.0 | C     | 3.0
+ 2022/2023 | SECOND | IFT109      | Computational Methods in Information Technology I   |  2 |  72.0 | A     | 5.0
+ 2022/2023 | SECOND | IFT110      | Systems in Information Technology I                 |  3 |  65.0 | B     | 4.0
+ 2022/2023 | SECOND | IFT111      | Seminar in Information Technology I                 |  4 |  66.0 | B     | 4.0
+ 2022/2023 | SECOND | IFT112      | Project Studies in Information Technology I         |  2 |  63.0 | B     | 4.0
+ 2023/2024 | FIRST  | IFT201      | Foundations of Information Technology II            |  3 |  62.0 | B     | 4.0
+ 2023/2024 | FIRST  | IFT202      | Principles of Information Technology II             |  4 |  73.0 | A     | 5.0
+ 2023/2024 | FIRST  | IFT203      | Methods in Information Technology II                |  2 |  66.0 | B     | 4.0
+ 2023/2024 | FIRST  | IFT204      | Laboratory Practice in Information Technology II    |  3 |  87.0 | A     | 5.0
+ 2023/2024 | FIRST  | IFT205      | Mathematics for Information Technology II           |  4 |  77.0 | A     | 5.0
+ 2023/2024 | FIRST  | IFT206      | Communication in Information Technology II          |  2 |  69.0 | B     | 4.0
+ 2023/2024 | SECOND | IFT207      | Theory of Information Technology II                 |  3 |  62.0 | B     | 4.0
+ 2023/2024 | SECOND | IFT208      | Applied Information Technology II                   |  4 |  81.0 | A     | 5.0
+ 2023/2024 | SECOND | IFT209      | Computational Methods in Information Technology II  |  2 |  77.0 | A     | 5.0
+ 2023/2024 | SECOND | IFT210      | Systems in Information Technology II                |  3 |  72.0 | A     | 5.0
+ 2023/2024 | SECOND | IFT211      | Seminar in Information Technology II                |  4 |  44.0 | E     | 1.0
+ 2023/2024 | SECOND | IFT212      | Project Studies in Information Technology II        |  2 |  55.0 | C     | 3.0
+ 2024/2025 | FIRST  | IFT301      | Foundations of Information Technology III           |  3 |  73.0 | A     | 5.0
+ 2024/2025 | FIRST  | IFT302      | Principles of Information Technology III            |  4 |  67.0 | B     | 4.0
+
+==================== sql/queries/q02_course_broadsheet.sql
+-- Q02 Course broadsheet: all students and scores for CSC301 in 2025/2026 (lecturer/exam officer view)
+SELECT s.matric_no, s.last_name || ', ' || s.first_name AS student,
+   matric_no   |       student       |  ca  | exam | total | grade 
+---------------+---------------------+------+------+-------+-------
+ AU/2023/00002 | Ojo, Sadiq          | 15.0 | 44.0 |  59.0 | C
+ AU/2023/00044 | Eze, Fatima         | 17.0 | 45.0 |  62.0 | B
+ AU/2023/00074 | Fashola, Chinedu    | 22.0 | 55.0 |  77.0 | A
+ AU/2023/00086 | Danjuma, Chukwuma   | 17.0 | 41.0 |  58.0 | C
+ AU/2023/00104 | Kalu, Zainab        | 16.0 | 35.0 |  51.0 | C
+ AU/2023/00146 | Nwosu, Efosa        | 19.0 | 44.0 |  63.0 | B
+ AU/2023/00416 | Falana, Halima      | 12.0 | 20.0 |  32.0 | F
+ AU/2023/00518 | Ibrahim, Divine     | 14.0 | 34.0 |  48.0 | D
+ AU/2023/00632 | Adeyemi, Halima     | 20.0 | 52.0 |  72.0 | A
+ AU/2023/00650 | Coker, Abdullahi    | 21.0 | 45.0 |  66.0 | B
+ AU/2023/00704 | Quadri, Divine      | 11.0 | 24.0 |  35.0 | F
+ AU/2023/00782 | Opoola, Damilola    | 13.0 | 37.0 |  50.0 | C
+ AU/2023/00788 | Ibrahim, Rotimi     | 22.0 | 51.0 |  73.0 | A
+ AU/2023/00842 | Quadri, Gbenga      | 12.0 | 32.0 |  44.0 | E
+ AU/2023/00902 | Usman, Jumoke       | 14.0 | 26.0 |  40.0 | E
+ AU/2023/01034 | Abubakar, Hauwa     | 17.0 | 42.0 |  59.0 | C
+ AU/2023/01040 | Idowu, Ifeoma       | 12.0 | 32.0 |  44.0 | E
+ AU/2023/01130 | Okonkwo, Fatima     | 14.0 | 33.0 |  47.0 | D
+ AU/2023/01226 | Fashola, Chukwuma   | 13.0 | 38.0 |  51.0 | C
+ AU/2023/01424 | Chukwu, Chiamaka    | 18.0 | 39.0 |  57.0 | C
+ AU/2023/01442 | Coker, Obinna       | 12.0 | 28.0 |  40.0 | E
+ AU/2023/01496 | Gambo, Garba        | 15.0 | 36.0 |  51.0 | C
+ AU/2023/01532 | Lawal, Adebayo      | 22.0 | 57.0 |  79.0 | A
+ AU/2023/01826 | Chukwu, Peace       | 19.0 | 47.0 |  66.0 | B
+ AU/2023/01844 | Opoola, Jumoke      | 13.0 | 20.0 |  33.0 | F
+ AU/2023/02012 | Dike, Precious      | 17.0 | 39.0 |  56.0 | C
+
+==================== sql/queries/q03_top_students_per_department.sql
+-- Q03 Dean's list: top 3 active students per department by CGPA (computed on the fly)
+WITH cgpa AS (
+ dept | rnk |   matric_no   |      student       | cgpa 
+------+-----+---------------+--------------------+------
+ ACC  |   1 | AU/2023/17486 | Victoria Williams  | 5.00
+ ACC  |   1 | AU/2024/10311 | Lami Gambo         | 5.00
+ ACC  |   1 | AU/2025/01882 | Kelechi Akinola    | 5.00
+ ACC  |   1 | AU/2025/03202 | Chinedu Balogun    | 5.00
+ ACC  |   1 | AU/2025/05428 | Nkechi Ekwueme     | 5.00
+ ACC  |   1 | AU/2025/09016 | Fatima Ibrahim     | 5.00
+ ACC  |   1 | AU/2025/09028 | Olamide Ojo        | 5.00
+ ACC  |   1 | AU/2025/17884 | Kemi Taiwo         | 5.00
+ ACC  |   2 | AU/2023/19934 | Temitope Mohammed  | 4.98
+ ACC  |   3 | AU/2023/09776 | Mariam Mohammed    | 4.97
+ ACC  |   3 | AU/2024/00921 | Ebuka Danjuma      | 4.97
+ BUS  |   1 | AU/2023/12458 | Rukayat Akinola    | 5.00
+ BUS  |   1 | AU/2023/14798 | Uchenna Abubakar   | 5.00
+ BUS  |   1 | AU/2024/07791 | Obinna Danjuma     | 5.00
+ BUS  |   1 | AU/2024/15441 | Rotimi Coker       | 5.00
+ BUS  |   1 | AU/2024/17655 | Olamide Mohammed   | 5.00
+ BUS  |   1 | AU/2025/10900 | Fatima Chukwu      | 5.00
+ BUS  |   1 | AU/2025/16552 | Lami Salami        | 5.00
+ BUS  |   2 | AU/2023/10268 | Hauwa Zubairu      | 4.97
+ BUS  |   2 | AU/2023/15470 | Efosa Balogun      | 4.97
+ BUS  |   2 | AU/2024/19437 | Blessing Ojo       | 4.97
+ BUS  |   3 | AU/2023/04616 | Olamide Peters     | 4.96
+ BUS  |   3 | AU/2023/15044 | Adebayo Johnson    | 4.96
+ CSC  |   1 | AU/2023/10430 | Gbenga Taiwo       | 5.00
+ CSC  |   1 | AU/2023/16112 | Funmilayo Kalu     | 5.00
+ CSC  |   1 | AU/2023/17108 | Ifeoma Gambo       | 5.00
+
+==================== sql/queries/q03_top_students_per_department_optimised.sql
+-- Q03 (optimised) Dean's list read from the pre-aggregated materialized view mv_student_cgpa
+SELECT dept, rnk, matric_no, student, cgpa FROM (
+ dept | rnk |   matric_no   |      student       | cgpa 
+------+-----+---------------+--------------------+------
+ ACC  |   1 | AU/2023/17486 | Victoria Williams  | 5.00
+ ACC  |   1 | AU/2024/10311 | Lami Gambo         | 5.00
+ ACC  |   1 | AU/2025/01882 | Kelechi Akinola    | 5.00
+ ACC  |   1 | AU/2025/03202 | Chinedu Balogun    | 5.00
+ ACC  |   1 | AU/2025/05428 | Nkechi Ekwueme     | 5.00
+ ACC  |   1 | AU/2025/09016 | Fatima Ibrahim     | 5.00
+ ACC  |   1 | AU/2025/09028 | Olamide Ojo        | 5.00
+ ACC  |   1 | AU/2025/17884 | Kemi Taiwo         | 5.00
+ ACC  |   2 | AU/2023/19934 | Temitope Mohammed  | 4.98
+ ACC  |   3 | AU/2023/09776 | Mariam Mohammed    | 4.97
+ ACC  |   3 | AU/2024/00921 | Ebuka Danjuma      | 4.97
+ BUS  |   1 | AU/2023/12458 | Rukayat Akinola    | 5.00
+ BUS  |   1 | AU/2023/14798 | Uchenna Abubakar   | 5.00
+ BUS  |   1 | AU/2024/07791 | Obinna Danjuma     | 5.00
+ BUS  |   1 | AU/2024/15441 | Rotimi Coker       | 5.00
+ BUS  |   1 | AU/2024/17655 | Olamide Mohammed   | 5.00
+ BUS  |   1 | AU/2025/10900 | Fatima Chukwu      | 5.00
+ BUS  |   1 | AU/2025/16552 | Lami Salami        | 5.00
+ BUS  |   2 | AU/2023/10268 | Hauwa Zubairu      | 4.97
+ BUS  |   2 | AU/2023/15470 | Efosa Balogun      | 4.97
+ BUS  |   2 | AU/2024/19437 | Blessing Ojo       | 4.97
+ BUS  |   3 | AU/2023/04616 | Olamide Peters     | 4.96
+ BUS  |   3 | AU/2023/15044 | Adebayo Johnson    | 4.96
+ CSC  |   1 | AU/2023/10430 | Gbenga Taiwo       | 5.00
+ CSC  |   1 | AU/2023/16112 | Funmilayo Kalu     | 5.00
+ CSC  |   1 | AU/2023/17108 | Ifeoma Gambo       | 5.00
+
+==================== sql/queries/q04_probation_list.sql
+-- Q04 Probation list: Computer Science students whose CGPA is below 1.50
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student, s.current_level,
+   matric_no   |      student      | current_level | cgpa 
+---------------+-------------------+---------------+------
+ AU/2024/08001 | Victoria Ekwueme  |           300 | 0.04
+ AU/2023/13274 | Olamide Abubakar  |           400 | 0.10
+ AU/2025/06328 | Uchenna Ogunleye  |           200 | 0.11
+ AU/2024/15135 | Uchenna Salami    |           300 | 0.26
+ AU/2024/00057 | Lukman Ekwueme    |           300 | 0.26
+ AU/2023/03434 | Yetunde Egwu      |           400 | 0.27
+ AU/2025/00010 | Nkechi Falana     |           200 | 0.31
+ AU/2025/16732 | Temitope Adeyemi  |           200 | 0.31
+ AU/2025/14812 | Hauwa Johnson     |           200 | 0.36
+ AU/2023/17840 | Kemi Ojo          |           400 | 0.37
+ AU/2023/02366 | Musa Igwe         |           400 | 0.42
+ AU/2025/09850 | Jumoke Adeleke    |           200 | 0.50
+ AU/2024/13065 | Abdullahi Okonkwo |           300 | 0.56
+ AU/2025/05278 | Sadiq Idowu       |           200 | 0.56
+ AU/2023/02864 | Mariam Williams   |           400 | 0.58
+ AU/2025/04402 | Halima Nnaji      |           200 | 0.58
+ AU/2024/03663 | Lami Yakubu       |           300 | 0.64
+ AU/2024/13395 | Tunde Gambo       |           300 | 0.64
+ AU/2023/10976 | Yusuf Uche        |           400 | 0.64
+ AU/2023/01040 | Ifeoma Idowu      |           400 | 0.64
+ AU/2025/00106 | Oluwaseun Yakubu  |           200 | 0.67
+ AU/2023/16106 | Ikenna Coker      |           400 | 0.69
+ AU/2023/03914 | Temitope Bello    |           400 | 0.70
+ AU/2025/13372 | Joy Taiwo         |           200 | 0.72
+ AU/2023/08900 | Uchenna Gambo     |           400 | 0.73
+ AU/2023/14102 | Obinna Okonkwo    |           400 | 0.73
+
+==================== sql/queries/q05_pass_rate_by_course.sql
+-- Q05 Senate report: pass rate and mean score of every Computing course in 2025/2026
+SELECT c.course_code, sem.term,
+ course_code |  term  | candidates | mean_score | pass_rate_pct 
+-------------+--------+------------+------------+---------------
+ IFT209      | SECOND |        268 |       58.0 |          86.6
+ IFT205      | FIRST  |        268 |       58.0 |          86.9
+ CSC312      | SECOND |        292 |       58.8 |          87.7
+ IFT208      | SECOND |        268 |       58.2 |          87.7
+ CSC210      | SECOND |        282 |       59.9 |          87.9
+ CYB304      | FIRST  |        281 |       57.8 |          87.9
+ CSC404      | FIRST  |        249 |       59.7 |          88.4
+ IFT203      | FIRST  |        268 |       58.5 |          88.4
+ IFT207      | SECOND |        268 |       58.3 |          88.4
+ CSC108      | SECOND |        287 |       59.2 |          88.5
+ CYB309      | SECOND |        281 |       57.2 |          88.6
+ CYB310      | SECOND |        281 |       57.9 |          88.6
+ SEN306      | FIRST  |        273 |       58.4 |          88.6
+ IFT210      | SECOND |        268 |       58.7 |          88.8
+ CSC101      | FIRST  |        287 |       59.9 |          88.9
+ SEN305      | FIRST  |        273 |       58.9 |          89.0
+ SEN312      | SECOND |        273 |       58.8 |          89.0
+ CYB104      | FIRST  |        257 |       59.3 |          89.1
+ IFT410      | SECOND |        302 |       60.6 |          89.1
+ IFT202      | FIRST  |        268 |       59.0 |          89.2
+ CSC309      | SECOND |        292 |       58.3 |          89.4
+ SEN307      | SECOND |        273 |       59.3 |          89.4
+ SEN310      | SECOND |        273 |       58.8 |          89.4
+ SEN110      | SECOND |        266 |       58.5 |          89.5
+ IFT211      | SECOND |        268 |       58.3 |          89.6
+ IFT212      | SECOND |        268 |       59.1 |          89.6
+
+==================== sql/queries/q06_lecturer_workload.sql
+-- Q06 Lecturer workload in the current (open) semester, incl. results still to be entered
+SELECT l.staff_no, l.title || ' ' || l.last_name AS lecturer,
+ staff_no |   lecturer   | courses | students | pending_results 
+----------+--------------+---------+----------+-----------------
+ SP/00031 | Mrs Bello    |       5 |     1098 |            1098
+ SP/00174 | Mr Nwosu     |       6 |     1086 |            1086
+ SP/00159 | Dr Idowu     |       4 |     1076 |            1076
+ SP/00059 | Prof Danjuma |       3 |      921 |             921
+ SP/00101 | Prof Balogun |       3 |      891 |             891
+ SP/00103 | Mrs Egwu     |       5 |      858 |             858
+ SP/00093 | Dr Akinola   |       5 |      858 |             858
+ SP/00123 | Dr Ogunleye  |       3 |      853 |             853
+ SP/00064 | Dr Taiwo     |       3 |      833 |             833
+ SP/00005 | Prof Nwosu   |       6 |      820 |             820
+(10 rows)
+
+
+==================== sql/queries/q07_student_name_search.sql
+-- Q07 Registry search box: case-insensitive prefix search on surname
+SELECT matric_no, first_name, last_name, current_level, status
+   matric_no   | first_name | last_name | current_level |  status   
+---------------+------------+-----------+---------------+-----------
+ AU/2021/02928 | Chinedu    | Okonkwo   |           400 | GRADUATED
+ AU/2021/07638 | Chiamaka   | Okonkwo   |           400 | GRADUATED
+ AU/2022/01645 | Chinedu    | Okonkwo   |           400 | GRADUATED
+ AU/2022/03739 | Chinedu    | Okonkwo   |           400 | GRADUATED
+ AU/2022/08749 | Chinedu    | Okonkwo   |           400 | GRADUATED
+ AU/2022/17899 | Chinedu    | Okonkwo   |           400 | GRADUATED
+ AU/2023/08918 | Chiamaka   | Okonkwo   |           400 | ACTIVE
+ AU/2023/09632 | Chiamaka   | Okonkwo   |           400 | ACTIVE
+ AU/2023/14336 | Chiamaka   | Okonkwo   |           400 | ACTIVE
+ AU/2024/10359 | Chiamaka   | Okonkwo   |           300 | ACTIVE
+ AU/2024/12657 | Chinedu    | Okonkwo   |           300 | PROBATION
+ AU/2024/15051 | Chinedu    | Okonkwo   |           300 | ACTIVE
+ AU/2026/04907 | Chinedu    | Okonkwo   |           100 | ACTIVE
+ AU/2026/05393 | Chiamaka   | Okonkwo   |           100 | ACTIVE
+ AU/2026/05867 | Chiamaka   | Okonkwo   |           100 | ACTIVE
+ AU/2026/06263 | Chiamaka   | Okonkwo   |           100 | ACTIVE
+ AU/2026/07103 | Chinedu    | Okonkwo   |           100 | ACTIVE
+ AU/2026/17327 | Chinedu    | Okonkwo   |           100 | ACTIVE
+(18 rows)
+
+
+==================== sql/queries/q08_pending_results_for_lecturer.sql
+-- Q08 Grade-entry screen: pending results for every course lecturer SP/00001 teaches
+SELECT c.course_code, s.matric_no, e.ca_score, e.exam_score
+ course_code |   matric_no   | ca_score | exam_score 
+-------------+---------------+----------+------------
+ IFT302      | AU/2024/00039 |          |           
+ IFT302      | AU/2024/00051 |          |           
+ IFT302      | AU/2024/00243 |          |           
+ IFT302      | AU/2024/00291 |          |           
+ IFT302      | AU/2024/00327 |          |           
+ IFT302      | AU/2024/00615 |          |           
+ IFT302      | AU/2024/00669 |          |           
+ IFT302      | AU/2024/00741 |          |           
+ IFT302      | AU/2024/00753 |          |           
+ IFT302      | AU/2024/00771 |          |           
+ IFT302      | AU/2024/00855 |          |           
+ IFT302      | AU/2024/01011 |          |           
+ IFT302      | AU/2024/01065 |          |           
+ IFT302      | AU/2024/01383 |          |           
+ IFT302      | AU/2024/01647 |          |           
+ IFT302      | AU/2024/01707 |          |           
+ IFT302      | AU/2024/01995 |          |           
+ IFT302      | AU/2024/02001 |          |           
+ IFT302      | AU/2024/02031 |          |           
+ IFT302      | AU/2024/02043 |          |           
+ IFT302      | AU/2024/02169 |          |           
+ IFT302      | AU/2024/02175 |          |           
+ IFT302      | AU/2024/02379 |          |           
+ IFT302      | AU/2024/02445 |          |           
+ IFT302      | AU/2024/02457 |          |           
+ IFT302      | AU/2024/02739 |          |           
+
+==================== sql/queries/q09_first_class_rbar.sql
+-- Q09a First-class candidates in Computer Science - ROW-BY-ROW: calls fn_cgpa() twice per student
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student, fn_cgpa(s.student_id) AS cgpa
+   matric_no   |      student       | cgpa 
+---------------+--------------------+------
+ AU/2021/06552 | Lami Ogunleye      | 5.00
+ AU/2023/10430 | Gbenga Taiwo       | 5.00
+ AU/2023/16112 | Funmilayo Kalu     | 5.00
+ AU/2023/17108 | Ifeoma Gambo       | 5.00
+ AU/2024/06549 | Mariam Williams    | 5.00
+ AU/2024/07851 | Emeka Uche         | 5.00
+ AU/2025/11584 | Nkechi Quadri      | 5.00
+ AU/2025/12784 | Fatima Eze         | 5.00
+ AU/2022/03877 | Peace Okonkwo      | 4.99
+ AU/2021/00972 | Hauwa Eze          | 4.97
+ AU/2021/05010 | Joy Lawal          | 4.97
+ AU/2021/09912 | Hauwa Gambo        | 4.97
+ AU/2022/08323 | Kelechi Johnson    | 4.97
+ AU/2024/10053 | Obinna Ojo         | 4.97
+ AU/2022/01447 | Oluwaseun Ibrahim  | 4.96
+ AU/2024/02691 | Halima Abubakar    | 4.96
+ AU/2024/05685 | Gbenga Adeleke     | 4.96
+ AU/2024/07461 | Funmilayo Nwosu    | 4.96
+ AU/2022/00031 | Peace Williams     | 4.94
+ AU/2022/01033 | Musa Ogunleye      | 4.94
+ AU/2022/10429 | Olamide Idowu      | 4.94
+ AU/2025/02842 | Garba Balogun      | 4.94
+ AU/2025/06640 | Jumoke Igwe        | 4.94
+ AU/2025/07654 | Ikenna Salami      | 4.94
+ AU/2021/17712 | Efosa Gambo        | 4.93
+ AU/2022/12097 | Efosa Adeyemi      | 4.93
+
+==================== sql/queries/q09_first_class_setbased.sql
+-- Q09b First-class candidates in Computer Science - SET-BASED rewrite (one join + GROUP BY)
+SELECT s.matric_no, s.first_name || ' ' || s.last_name AS student,
+   matric_no   |      student       | cgpa 
+---------------+--------------------+------
+ AU/2021/06552 | Lami Ogunleye      | 5.00
+ AU/2023/10430 | Gbenga Taiwo       | 5.00
+ AU/2023/16112 | Funmilayo Kalu     | 5.00
+ AU/2023/17108 | Ifeoma Gambo       | 5.00
+ AU/2024/06549 | Mariam Williams    | 5.00
+ AU/2024/07851 | Emeka Uche         | 5.00
+ AU/2025/11584 | Nkechi Quadri      | 5.00
+ AU/2025/12784 | Fatima Eze         | 5.00
+ AU/2022/03877 | Peace Okonkwo      | 4.99
+ AU/2021/00972 | Hauwa Eze          | 4.97
+ AU/2021/05010 | Joy Lawal          | 4.97
+ AU/2021/09912 | Hauwa Gambo        | 4.97
+ AU/2022/08323 | Kelechi Johnson    | 4.97
+ AU/2024/10053 | Obinna Ojo         | 4.97
+ AU/2022/01447 | Oluwaseun Ibrahim  | 4.96
+ AU/2024/02691 | Halima Abubakar    | 4.96
+ AU/2024/05685 | Gbenga Adeleke     | 4.96
+ AU/2024/07461 | Funmilayo Nwosu    | 4.96
+ AU/2022/00031 | Peace Williams     | 4.94
+ AU/2022/01033 | Musa Ogunleye      | 4.94
+ AU/2022/10429 | Olamide Idowu      | 4.94
+ AU/2025/02842 | Garba Balogun      | 4.94
+ AU/2025/06640 | Jumoke Igwe        | 4.94
+ AU/2025/07654 | Ikenna Salami      | 4.94
+ AU/2021/17712 | Efosa Gambo        | 4.93
+ AU/2022/12097 | Efosa Adeyemi      | 4.93
+
+==================== sql/queries/q10_cohort_registrations.sql
+-- Q10 Registrations of the 2024 cohort currently in 300 level, per course
+--     (entry_year and current_level are correlated: planner row estimates suffer)
+ course_code | registered 
+-------------+------------
+ ACC301      |        274
+ ACC302      |        274
+ ACC303      |        274
+ ACC304      |        274
+ BUS301      |        259
+ BUS302      |        259
+ BUS303      |        259
+ BUS304      |        259
+ CSC301      |        282
+ CSC302      |        282
+ CSC303      |        282
+ CSC304      |        282
+ CYB301      |        275
+ CYB302      |        275
+ CYB303      |        275
+ CYB304      |        275
+ ECO301      |        313
+ ECO302      |        313
+ ECO303      |        313
+ ECO304      |        313
+ EEE301      |        291
+ EEE302      |        291
+ EEE303      |        291
+ EEE304      |        291
+ IFT301      |        268
+ IFT302      |        268
+

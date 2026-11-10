@@ -1,0 +1,75 @@
+-- Q05 Pass rate per course 2025/2026
+-- file: sql/queries/q05_pass_rate_by_course.sql
+-- phase: optimised
+
+SELECT c.course_code, sem.term,
+       count(*) AS candidates,
+       round(avg(e.total_score), 1) AS mean_score,
+       round(100.0 * count(*) FILTER (WHERE e.total_score >= 40) / count(*), 1) AS pass_rate_pct
+FROM academic_session ses
+JOIN semester sem      ON sem.session_id = ses.session_id
+JOIN course_offering o ON o.semester_id  = sem.semester_id
+JOIN course c          ON c.course_id    = o.course_id
+JOIN department d      ON d.department_id = c.department_id
+JOIN enrollment e      ON e.offering_id  = o.offering_id
+WHERE ses.name = '2025/2026' AND d.code IN ('CSC','CYB','SEN','IFT') AND e.status = 'COMPLETED'
+GROUP BY c.course_code, sem.term
+ORDER BY pass_rate_pct, c.course_code;
+
+-- EXPLAIN (ANALYZE, BUFFERS, SETTINGS)
+Sort  (cost=2949.76..2952.64 rows=1152 width=85) (actual time=15.680..15.686 rows=192.00 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE (e.total_score >= '40'::numeric)))::numeric) / (count(*))::numeric), 1)), c.course_code
+  Sort Method: quicksort  Memory: 35kB
+  Buffers: shared hit=854
+  ->  HashAggregate  (cost=2859.50..2891.18 rows=1152 width=85) (actual time=15.544..15.624 rows=192.00 loops=1)
+        Group Key: c.course_code, sem.term
+        Batches: 1  Memory Usage: 129kB
+        Buffers: shared hit=854
+        ->  Nested Loop  (cost=20.23..2391.08 rows=31228 width=17) (actual time=0.126..6.026 rows=52716.00 loops=1)
+              Buffers: shared hit=854
+              ->  Hash Join  (cost=19.80..76.81 rows=192 width=17) (actual time=0.122..0.200 rows=192.00 loops=1)
+                    Hash Cond: (o.course_id = c.course_id)
+                    Buffers: shared hit=19
+                    ->  Nested Loop  (cost=1.37..54.29 rows=576 width=14) (actual time=0.016..0.079 rows=576.00 loops=1)
+                          Buffers: shared hit=11
+                          ->  Hash Join  (cost=1.09..2.26 rows=2 width=8) (actual time=0.012..0.013 rows=2.00 loops=1)
+                                Hash Cond: (sem.session_id = ses.session_id)
+                                Buffers: shared hit=2
+                                ->  Seq Scan on semester sem  (cost=0.00..1.12 rows=12 width=10) (actual time=0.004..0.005 rows=12.00 loops=1)
+                                      Buffers: shared hit=1
+                                ->  Hash  (cost=1.07..1.07 rows=1 width=2) (actual time=0.004..0.005 rows=1.00 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on academic_session ses  (cost=0.00..1.07 rows=1 width=2) (actual time=0.003..0.003 rows=1.00 loops=1)
+                                            Filter: (name = '2025/2026'::bpchar)
+                                            Rows Removed by Filter: 5
+                                            Buffers: shared hit=1
+                          ->  Index Scan using idx_offering_semester on course_offering o  (cost=0.28..23.14 rows=288 width=10) (actual time=0.003..0.018 rows=288.00 loops=2)
+                                Index Cond: (semester_id = sem.semester_id)
+                                Index Searches: 2
+                                Buffers: shared hit=9
+                    ->  Hash  (cost=16.04..16.04 rows=192 width=11) (actual time=0.077..0.077 rows=192.00 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 17kB
+                          Buffers: shared hit=8
+                          ->  Hash Join  (cost=1.23..16.04 rows=192 width=11) (actual time=0.006..0.065 rows=192.00 loops=1)
+                                Hash Cond: (c.department_id = d.department_id)
+                                Buffers: shared hit=8
+                                ->  Seq Scan on course c  (cost=0.00..12.76 rows=576 width=13) (actual time=0.001..0.018 rows=576.00 loops=1)
+                                      Buffers: shared hit=7
+                                ->  Hash  (cost=1.18..1.18 rows=4 width=2) (actual time=0.004..0.004 rows=4.00 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on department d  (cost=0.00..1.18 rows=4 width=2) (actual time=0.002..0.003 rows=4.00 loops=1)
+                                            Filter: (code = ANY ('{CSC,CYB,SEN,IFT}'::bpchar[]))
+                                            Rows Removed by Filter: 8
+                                            Buffers: shared hit=1
+              ->  Index Only Scan using idx_enrollment_offering_cover on enrollment e  (cost=0.42..9.50 rows=255 width=8) (actual time=0.002..0.018 rows=274.56 loops=192)
+                    Index Cond: (offering_id = o.offering_id)
+                    Filter: ((status)::text = 'COMPLETED'::text)
+                    Heap Fetches: 0
+                    Index Searches: 192
+                    Buffers: shared hit=835
+Planning:
+  Buffers: shared hit=35
+Planning Time: 0.575 ms
+Execution Time: 15.719 ms
