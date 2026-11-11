@@ -1,0 +1,70 @@
+
+==========================================================================================
+S1  Cluster topology
+==========================================================================================
+  shard shardA: shardA/127.0.0.1:27201,127.0.0.1:27202,127.0.0.1:27203
+  shard shardB: shardB/127.0.0.1:27211,127.0.0.1:27212,127.0.0.1:27213
+  shardA: 127.0.0.1:27201=PRIMARY, 127.0.0.1:27202=SECONDARY, 127.0.0.1:27203=SECONDARY
+  shardB: 127.0.0.1:27211=PRIMARY, 127.0.0.1:27212=SECONDARY, 127.0.0.1:27213=SECONDARY
+  mongos isdbgrid - applications connect only to the router
+
+==========================================================================================
+S2  Shard ausrp.students on {_id: 'hashed'} and load 20,000 student documents
+==========================================================================================
+  inserted 20,000 documents through mongos in 3.7s
+  shard key choice: hashed matric number -> uniform spread, no hot shard for new cohorts;
+  every portal lookup by matric number is still routed to exactly one shard.
+
+==========================================================================================
+S3  Data distribution
+==========================================================================================
+  shardA:  9,937 documents (49.7%),   69.7 MB
+  shardB: 10,063 documents (50.3%),   70.4 MB
+  shardA: 1 chunk(s) of the hashed key range
+  shardB: 1 chunk(s) of the hashed key range
+
+==========================================================================================
+S4  Query routing by mongos
+==========================================================================================
+  by shard key  {_id: 'AU/2022/00007'}         stage=SINGLE_SHARD  shards contacted=['shardA'] nReturned per shard={'shardA': 1}
+  non-shard key {'department.code': 'CSC'}     stage=SHARD_MERGE   shards contacted=['shardB', 'shardA'] nReturned per shard={'shardB': 870, 'shardA': 858}
+  -> lookups by matric number scale linearly with shards; department-wide reports fan out to all shards.
+
+==========================================================================================
+S5  Write concern: acknowledgement level vs latency (200 inserts each, via mongos)
+==========================================================================================
+  write concern                        median ms   p95 ms  survives primary failure?
+  w:1                                      0.430    0.704  no - may be rolled back
+  w:'majority'                             9.557   15.378  yes - on 2 of 3 members
+  w:'majority', j:true                     9.831   14.464  yes - on disk on 2 of 3
+
+==========================================================================================
+S6  Read preference: route read-only portal traffic to secondaries
+==========================================================================================
+  readPreference=Primary    served by shardA member :27201 (PRIMARY)
+  readPreference=Secondary  served by shardA member :27202 (SECONDARY)
+  readConcern 'majority' guarantees the document read cannot later be rolled back;
+  'local' on a secondary may return slightly stale data (eventual consistency).
+
+==========================================================================================
+S7  Distributed ACID transaction across two shards
+==========================================================================================
+  student AU/2023/00008 lives on shardA; student AU/2023/00002 lives on shardB
+  T1 commit -> flags=[True, True], audit docs=1  (both shards + audit updated atomically, 2PC)
+  T2 abort  -> flags=[True, True], audit docs=1  (nothing from T2 is visible on either shard)
+
+==========================================================================================
+S8  Failover: kill -9 the PRIMARY of shardA while the portal keeps writing (w:majority, retryWrites)
+==========================================================================================
+  t=0.0s   SIGKILL to shardA primary :27201 (pid 78491)
+  t=10.2s  member :27202 elected PRIMARY of shardA (electionTimeoutMillis = 10000 ms)
+  writes attempted: 158, failed: 0; max write latency 10077 ms
+  -> the in-flight write to shardA was held by mongos/driver until a new primary existed and was then
+     retried (retryWrites): the portal saw a ~10 s pause, not an error. Availability is lost only for
+     the keys on the failed shard and only for the election window (CP behaviour of a replica set).
+  writes slower than 500 ms around the failover: 1
+  restarted :27201; it rejoined as SECONDARY. shardA now: {'127.0.0.1:27201': 'SECONDARY', '127.0.0.1:27202': 'PRIMARY', '127.0.0.1:27203': 'SECONDARY'}
+  (with priority 2, :27201 will later call an election and take back the primary role)
+cfgRS [('127.0.0.1:27200', 'PRIMARY')]
+shardA [('127.0.0.1:27201', 'SECONDARY'), ('127.0.0.1:27202', 'PRIMARY'), ('127.0.0.1:27203', 'SECONDARY')]
+shardB [('127.0.0.1:27211', 'PRIMARY'), ('127.0.0.1:27212', 'SECONDARY'), ('127.0.0.1:27213', 'SECONDARY')]

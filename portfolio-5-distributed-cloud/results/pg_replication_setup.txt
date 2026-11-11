@@ -1,0 +1,9 @@
+>> initdb primary
+>> load university_portal into primary (pg_dump from :5432 | psql :5433)
+>> pg_basebackup -> standby (creates replication slot 'standby1', writes standby.signal)
+ application_name | client_addr |   state   | sync_state | sent_lsn  | replay_lsn 
+------------------+-------------+-----------+------------+-----------+------------
+ standby1         | ::1         | streaming | async      | 0/A000000 | 0/A000000
+(1 row)
+
+standby in recovery: true

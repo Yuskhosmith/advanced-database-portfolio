@@ -1,0 +1,63 @@
+Server: PostgreSQL 18.3 (Homebrew) on aarch64-apple-darwin25.2.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit
+
+==========================================================================================
+R1  Topology
+==========================================================================================
+  primary :5433: in_recovery=False, timeline=1, enrollment rows=613,360
+  standby :5434: in_recovery=True, timeline=1, enrollment rows=613,360
+  standby1: state=streaming sync_state=async sent=0/A000000 replayed=0/A000000 bytes_behind=0 write_lag=0:00:00.000079 flush_lag=0:00:00.000079 replay_lag=0:00:00.000079
+  replication slot: ('standby1', 'physical', True, '0/A000000')
+
+==========================================================================================
+R2  Replication lag: time until a committed row is visible on the standby (asynchronous)
+==========================================================================================
+  50 probes: median 0.29 ms, p95 0.44 ms, max 2.23 ms  (eventual consistency window on the read replica)
+  bulk UPDATE of 53,328 rows committed in 645 ms; standby caught up 35 ms later
+  standby1: state=streaming sync_state=async sent=0/CF68F70 replayed=0/CF68F70 bytes_behind=0 write_lag=0:00:00.008349 flush_lag=0:00:00.008350 replay_lag=0:00:00.035033
+
+==========================================================================================
+R3  Standby is read-only; read scaling
+==========================================================================================
+  write on standby rejected: [25006] cannot execute UPDATE in a read-only transaction
+  transcript query (Q01) served by the standby: 48 rows, first: ('2022/2023', 'FIRST', 'IFT101', 'Foundations of Information Technology I')
+  one client on the standby: 4,070 transcript reads/s while the primary handles writes
+
+==========================================================================================
+R4  Commit latency: asynchronous vs synchronous replication (300 single-row commits each)
+==========================================================================================
+  after ALTER SYSTEM SET synchronous_standby_names = 'FIRST 1 (standby1)':
+  standby1: state=streaming sync_state=sync sent=0/CF76B60 replayed=0/CF76B60 bytes_behind=0 write_lag=0:00:00.000051 flush_lag=0:00:00.000060 replay_lag=0:00:00.000073
+
+  mode                                         median ms   p95 ms  data loss if primary dies (RPO)
+  asynchronous (default)                           0.094    0.259  last few ms of commits
+  synchronous, synchronous_commit=on               0.183    0.450  zero: commit waits for standby flush
+
+==========================================================================================
+R5  CAP trade-off: synchronous primary + standby DOWN = commits block (consistency over availability)
+==========================================================================================
+  standby stopped
+  after 3 s the INSERT is still waiting: state=active wait_event=IPC:SyncRep
+  pg_cancel_backend -> writer returned after 3008 ms (committed)
+  server -> client WARNING: canceling wait for synchronous replication due to user request | The transaction has already committed locally, but might not have been replicated to the standby.
+  synchronous_standby_names reset to '' (async) -> writes available again; restarting standby
+  standby1: state=streaming sync_state=async sent=0/CF84B78 replayed=0/CF84B78 bytes_behind=0 write_lag=0:00:00.000868 flush_lag=0:00:00.000931 replay_lag=0:00:00.001058
+
+==========================================================================================
+R6  Failover: primary crashes (immediate shutdown), standby is promoted
+==========================================================================================
+  t=0.000s  primary killed (pg_ctl stop -m immediate = simulated crash)
+  t=0.120s  primary unreachable: connection refused
+  t=0.236s  pg_ctl promote completed
+  t=0.239s  new primary (:5434) accepts writes  ->  RTO = 0.24 s (plus detection time in production)
+  in_recovery=False, timeline=2 (timeline increments on promotion)
+  last write before the crash present on new primary: 'last write before crash'  ->  RPO = 0 for replicated commits
+
+==========================================================================================
+R7  Re-join the failed primary as a standby of the new primary (pg_rewind)
+==========================================================================================
+  pg_rewind: servers diverged at WAL location 0/CF84C40 on timeline 1
+  pg_rewind: rewinding from last common checkpoint at 0/9000080 on timeline 1
+  pg_rewind: Done!
+  pg_stat_replication on the NEW primary (:5434):
+  old_primary: state=streaming sync_state=async sent=0/CF8D8B8 replayed=0/CF8D8B8 bytes_behind=0 write_lag=0:00:00.000274 flush_lag=0:00:00.000274 replay_lag=0:00:00.000274
+  old primary :5433 in_recovery=True -> roles have been swapped

@@ -1,0 +1,8 @@
+mongod --configsvr --replSet cfgRS --port 27200 --dbpath <repo>/.data/mongo-shard/cfgRS-27200 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/cfgRS-27200/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardA --port 27201 --dbpath <repo>/.data/mongo-shard/shardA-27201 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardA-27201/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardA --port 27202 --dbpath <repo>/.data/mongo-shard/shardA-27202 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardA-27202/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardA --port 27203 --dbpath <repo>/.data/mongo-shard/shardA-27203 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardA-27203/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardB --port 27211 --dbpath <repo>/.data/mongo-shard/shardB-27211 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardB-27211/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardB --port 27212 --dbpath <repo>/.data/mongo-shard/shardB-27212 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardB-27212/mongod.log --wiredTigerCacheSizeGB 0.25
+mongod --shardsvr --replSet shardB --port 27213 --dbpath <repo>/.data/mongo-shard/shardB-27213 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/shardB-27213/mongod.log --wiredTigerCacheSizeGB 0.25
+mongos --configdb cfgRS/127.0.0.1:27200 --port 27300 --bind_ip 127.0.0.1 --fork --logpath <repo>/.data/mongo-shard/mongos.log

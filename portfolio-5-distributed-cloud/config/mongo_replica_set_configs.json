@@ -1,0 +1,53 @@
+{
+  "cfgRS": {
+    "_id": "cfgRS",
+    "members": [
+      {
+        "_id": 0,
+        "host": "127.0.0.1:27200",
+        "priority": 2
+      }
+    ],
+    "configsvr": true
+  },
+  "shardA": {
+    "_id": "shardA",
+    "members": [
+      {
+        "_id": 0,
+        "host": "127.0.0.1:27201",
+        "priority": 2
+      },
+      {
+        "_id": 1,
+        "host": "127.0.0.1:27202",
+        "priority": 1
+      },
+      {
+        "_id": 2,
+        "host": "127.0.0.1:27203",
+        "priority": 1
+      }
+    ]
+  },
+  "shardB": {
+    "_id": "shardB",
+    "members": [
+      {
+        "_id": 0,
+        "host": "127.0.0.1:27211",
+        "priority": 2
+      },
+      {
+        "_id": 1,
+        "host": "127.0.0.1:27212",
+        "priority": 1
+      },
+      {
+        "_id": 2,
+        "host": "127.0.0.1:27213",
+        "priority": 1
+      }
+    ]
+  }
+}

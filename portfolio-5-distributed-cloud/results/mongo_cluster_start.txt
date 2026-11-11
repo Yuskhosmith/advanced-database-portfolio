@@ -1,0 +1,1 @@
+cluster started: [{'_id': 'shardA', 'host': 'shardA/127.0.0.1:27201,127.0.0.1:27202,127.0.0.1:27203', 'state': 1, 'topologyTime': Timestamp(1794326166, 13), 'replSetConfigVersion': -1}, {'_id': 'shardB', 'host': 'shardB/127.0.0.1:27211,127.0.0.1:27212,127.0.0.1:27213', 'state': 1, 'topologyTime': Timestamp(1794326166, 31), 'replSetConfigVersion': -1}]
