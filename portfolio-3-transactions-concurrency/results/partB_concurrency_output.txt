@@ -1,0 +1,158 @@
+Server: PostgreSQL 18.3 (Homebrew) on aarch64-apple-darwin25.2.0, compiled by Apple clang version 17.0.0 (clang-1700.6.3.2), 64-bit
+Default isolation: read committed
+
+============================================================================================
+C1  LOST UPDATE - naive read-check-write registration under READ COMMITTED
+    CSC190 has capacity 2 and 1 seat already taken; two students click 'Register' together.
+============================================================================================
+[  0.043s] PRE  CSC190: enrolled rows = 1, seats_taken counter = 1, capacity = 2  (consistent)
+[  0.050s] T1   BEGIN (READ COMMITTED)
+[  0.050s] T2   BEGIN (READ COMMITTED)
+[  0.051s] T1   SELECT seats_taken -> 1/2: seat available
+[  0.051s] T2   SELECT seats_taken -> 1/2: seat available
+[  0.052s] T1   INSERT enrollment; UPDATE seats_taken = 2
+[  0.053s] T1   COMMIT
+[  0.054s] T2   INSERT enrollment; UPDATE seats_taken = 2  (overwrites T1)
+[  0.054s] T2   COMMIT
+[  0.054s] RES  CSC190: enrolled rows = 3, seats_taken counter = 2, capacity = 2  <-- OVERBOOKED / COUNTER WRONG
+[  0.054s] NOTE T1's increment was lost: 3 students hold 2 seats. The CHECK (seats_taken <= capacity)
+[  0.054s] NOTE constraint could not catch it because the counter itself is wrong.
+
+============================================================================================
+C2a FIX 1 - PESSIMISTIC LOCKING with SELECT ... FOR UPDATE
+============================================================================================
+[  0.061s] T1   BEGIN
+[  0.061s] T2   BEGIN
+[  0.062s] T1   SELECT ... FOR UPDATE -> 1/2  (row lock acquired)
+[  0.062s] T2   SELECT ... FOR UPDATE  (must wait for T1's lock)
+[  0.572s] OBS  p3-T2 is WAITING (Lock:transactionid) blocked by p3-T1 :: SELECT seats_taken, capacity FROM course_offering WHERE offering_id=$1
+[  0.583s] T1   INSERT enrollment; UPDATE seats_taken = 2
+[  0.584s] T1   COMMIT (lock released)
+[  0.584s] T2   SELECT ... FOR UPDATE returned (after waiting) -> 2/2
+[  0.584s] T2   course full -> ROLLBACK, student told 'no seats left'
+[  0.585s] RES  CSC190: enrolled rows = 2, seats_taken counter = 2, capacity = 2  (consistent)
+
+============================================================================================
+C2b FIX 2 - OPTIMISTIC: REPEATABLE READ detects the conflicting update, client retries
+============================================================================================
+[  0.603s] T1   BEGIN (REPEATABLE READ)
+[  0.604s] T2   BEGIN (REPEATABLE READ)
+[  0.606s] T1   SELECT -> 1/2
+[  0.608s] T2   SELECT -> 1/2
+[  0.616s] T1   INSERT + UPDATE seats; COMMIT
+[  0.621s] T2   ERROR 40001: could not serialize access due to concurrent update
+[  0.621s] T2   ROLLBACK -> application retries the whole transaction
+[  0.623s] T2   retry: SELECT -> 2/2 -> course full, registration refused
+[  0.624s] RES  CSC190: enrolled rows = 2, seats_taken counter = 2, capacity = 2  (consistent)
+
+============================================================================================
+C2c FIX 3 - ATOMIC CONDITIONAL UPDATE (no gap between check and write)
+    UPDATE course_offering SET seats_taken = seats_taken + 1
+    WHERE offering_id = ? AND seats_taken < capacity RETURNING seats_taken
+============================================================================================
+[  0.648s] T1   conditional UPDATE -> seat taken, now 2
+[  0.652s] T2   conditional UPDATE (waits for T1's row lock)
+[  1.162s] OBS  p3-T2 is WAITING (Lock:transactionid) blocked by p3-T1 :: UPDATE course_offering SET seats_taken = seats_taken + 1 WHERE offerin
+[  1.163s] T1   COMMIT
+[  1.163s] T2   conditional UPDATE returned after wait -> 0 rows: WHERE re-checked on the NEW row version, course full
+[  1.165s] RES  CSC190: enrolled rows = 2, seats_taken counter = 2, capacity = 2  (consistent)
+
+============================================================================================
+C3  WRITE SKEW - the 24-unit credit limit in fn_register_course v1
+    One student (20 units registered) submits two 4-unit courses from two browser tabs.
+============================================================================================
+
+--- C3a  v1 under READ COMMITTED: both transactions see 20 units, each adds 4
+[  1.224s] PRE  student 11 registered MTH105 + PHY105 -> 20 units (limit 24)
+[  1.238s] T1   BEGIN READ COMMITTED; SELECT fn_register_course(student, ECO102 4u)
+[  1.251s] T1   OK (not committed yet)
+[  1.252s] T2   BEGIN READ COMMITTED; SELECT fn_register_course(student, ACC102 4u)
+[  1.757s] OBS  no session is waiting on a lock
+[  1.759s] T1   COMMIT ok
+[  1.759s] T2   fn_register_course OK
+[  1.760s] T2   COMMIT ok
+[  1.763s] RES  student 11 now has 28 units   <-- RULE VIOLATED (limit 24)
+
+--- C3b  v1 under SERIALIZABLE: SSI detects the read/write dependency cycle
+[  1.782s] PRE  student 11 registered MTH105 + PHY105 -> 20 units (limit 24)
+[  1.798s] T1   BEGIN SERIALIZABLE; SELECT fn_register_course(student, ECO102 4u)
+[  1.830s] T1   OK (not committed yet)
+[  1.830s] T2   BEGIN SERIALIZABLE; SELECT fn_register_course(student, ACC102 4u)
+[  2.338s] OBS  no session is waiting on a lock
+[  2.339s] T1   COMMIT ok
+[  2.339s] T2   fn_register_course OK
+[  2.341s] T2   COMMIT failed 40001: could not serialize access due to read/write dependencies among transactions
+[  2.341s] T2      detail: Reason code: Canceled on identification as a pivot, during commit attempt.
+[  2.342s] RES  student 11 now has 24 units   (rule respected)
+
+--- C3c  install fn_register_course v2 (locks the student row first), back to READ COMMITTED
+[  2.345s] ADM  fn_register_course v2 installed
+
+--- C3c  v2 under READ COMMITTED
+[  2.356s] PRE  student 11 registered MTH105 + PHY105 -> 20 units (limit 24)
+[  2.374s] T1   BEGIN READ COMMITTED; SELECT fn_register_course(student, ECO102 4u)
+[  2.391s] T1   OK (not committed yet)
+[  2.391s] T2   BEGIN READ COMMITTED; SELECT fn_register_course(student, ACC102 4u)
+[  2.899s] OBS  p3-T2 is WAITING (Lock:transactionid) blocked by p3-T1 :: SELECT fn_register_course($1, $2)
+[  2.901s] T1   COMMIT ok
+[  2.918s] T2   ERROR AU003: Credit limit exceeded: 24 + 4 > 24
+[  2.920s] RES  student 11 now has 24 units   (rule respected)
+
+============================================================================================
+C4  ISOLATION LEVELS - non-repeatable read & phantom read: READ COMMITTED vs REPEATABLE READ
+============================================================================================
+
+--- reader A at READ COMMITTED
+[  3.034s] A    read 1: CA score = 10.0, students in CSC190 = 5
+[  3.037s] B    UPDATE CA score to 27 and INSERT a new student (not committed)
+[  3.038s] A    read while B uncommitted: CA = 10.0  -> no dirty read
+[  3.038s] B    COMMIT
+[  3.039s] A    read 2: CA score = 27.0 (NON-REPEATABLE READ), students = 6 (PHANTOM ROW appeared)
+
+--- reader A at REPEATABLE READ
+[  3.045s] A    read 1: CA score = 10.0, students in CSC190 = 5
+[  3.048s] B    UPDATE CA score to 27 and INSERT a new student (not committed)
+[  3.048s] A    read while B uncommitted: CA = 10.0  -> no dirty read
+[  3.048s] B    COMMIT
+[  3.049s] A    read 2: CA score = 10.0 (repeatable), students = 5 (no phantom)
+
+============================================================================================
+C5  DEADLOCK - two grade-correction jobs touch the same two results in opposite order
+============================================================================================
+[  3.051s] INFO results X=613391, Y=613392; deadlock_timeout = 1s
+
+--- WITHOUT lock ordering
+[  3.056s] T1   UPDATE result 613391
+[  3.113s] T2   UPDATE result 613392
+[  4.436s] T1   ERROR 40P01 deadlock_detected -> this transaction was chosen as the victim
+[  4.436s] T1      Process 76217 waits for ShareLock on transaction 109504; blocked by process 76218.
+[  4.437s] T2   UPDATE result 613391
+[  4.743s] T2   COMMIT
+
+--- WITH consistent lock ordering (fix)
+[  4.758s] T1   locked X and Y in enrollment_id order
+[  4.767s] T1   UPDATE result 613391
+[  5.072s] T1   UPDATE result 613392
+[  5.379s] T1   COMMIT
+[  5.381s] T2   locked X and Y in enrollment_id order
+[  5.395s] T2   UPDATE result 613392
+[  5.699s] T2   UPDATE result 613391
+[  6.004s] T2   COMMIT
+
+============================================================================================
+C6  MVCC - a writer does not block readers; each sees its own row version
+============================================================================================
+[  6.035s] W    txid 109510: UPDATE ca_score = 29 (uncommitted)
+[  6.039s] R    SELECT returned in 3.13 ms (not blocked): ca_score=None xmin=109509 xmax=109510 ctid=(7463,118)
+[  6.039s] R    xmax = 109510 marks the version as being replaced by W's transaction
+[  6.039s] W    W sees its own new version: ca_score=29.0 xmin=109510 ctid=(7463,119)
+[  6.041s] R    after COMMIT: ca_score=29.0 xmin=109510 ctid=(7463,119) (new tuple)
+
+============================================================================================
+C7  STRESS TEST - 40 students register for CSC190 (25 seats) at the same instant
+============================================================================================
+
+strategy                                         accepted  refused  rows  counter  cap      ms  verdict
+naive read-check-write (READ COMMITTED)                40        0    40        1   25      48  OVERBOOKED + counter wrong
+fn_register_course v2 (SELECT ... FOR UPDATE)          25       15    25       25   25      83  correct
+atomic conditional UPDATE                              25       15    25       25   25     277  correct

@@ -1,0 +1,117 @@
+psql:sql/01_commit_rollback_savepoint.sql:5: NOTICE:  table "demo_batch" does not exist, skipping
+DROP TABLE
+SELECT 5
+UPDATE 5
+DELETE 0
+--- Starting state
+   matric_no   | ca_score | exam_score | total_score |   status   | result_status 
+---------------+----------+------------+-------------+------------+---------------
+ AU/2023/00002 |          |            |             | REGISTERED | PENDING
+ AU/2023/00044 |          |            |             | REGISTERED | PENDING
+ AU/2023/00074 |          |            |             | REGISTERED | PENDING
+ AU/2023/00086 |          |            |             | REGISTERED | PENDING
+ AU/2023/00104 |          |            |             | REGISTERED | PENDING
+
+
+=== A1. COMMIT: whole batch of 3 scores is written atomically ===
+BEGIN
+SET
+UPDATE 3
+inside the transaction, txid:
+  txid  |          tx_started           
+--------+-------------------------------
+ 109422 | 2026-11-10 16:54:56.278945+01
+
+COMMIT
+   matric_no   | ca_score | exam_score | total_score |   status   | result_status | created_by_txid 
+---------------+----------+------------+-------------+------------+---------------+-----------------
+ AU/2023/00002 |     25.0 |       52.0 |        77.0 | COMPLETED  | SUBMITTED     |          109422
+ AU/2023/00044 |     18.0 |       40.0 |        58.0 | COMPLETED  | SUBMITTED     |          109422
+ AU/2023/00074 |     28.0 |       61.0 |        89.0 | COMPLETED  | SUBMITTED     |          109422
+ AU/2023/00086 |          |            |             | REGISTERED | PENDING       |          109421
+ AU/2023/00104 |          |            |             | REGISTERED | PENDING       |          109421
+
+audit trail written by trigger in the SAME transaction:
+ enrollment_id | old_ca | new_ca | old_exam | new_exam |      reason       
+---------------+--------+--------+----------+----------+-------------------
+        560029 |        |   25.0 |          |     52.0 | A1 initial upload
+        560141 |        |   18.0 |          |     40.0 | A1 initial upload
+        560221 |        |   28.0 |          |     61.0 | A1 initial upload
+
+
+=== A2. ROLLBACK on error: one invalid score (exam 75 > 70) aborts the whole batch ===
+BEGIN
+SET
+UPDATE 1
+row 4 updated inside transaction:
+   matric_no   | total_score 
+---------------+-------------
+ AU/2023/00086 |        70.0
+
+psql:sql/01_commit_rollback_savepoint.sql:51: ERROR:  new row for relation "enrollment" violates check constraint "enrollment_exam_score_check"
+any further statement in an aborted transaction is refused:
+psql:sql/01_commit_rollback_savepoint.sql:53: ERROR:  current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK
+after ROLLBACK, row 4 is back to NULL (atomicity: nothing from A2 survived):
+   matric_no   | ca_score | exam_score | total_score |   status   
+---------------+----------+------------+-------------+------------
+ AU/2023/00002 |     25.0 |       52.0 |        77.0 | COMPLETED
+ AU/2023/00044 |     18.0 |       40.0 |        58.0 | COMPLETED
+ AU/2023/00074 |     28.0 |       61.0 |        89.0 | COMPLETED
+ AU/2023/00086 |          |            |             | REGISTERED
+ AU/2023/00104 |          |            |             | REGISTERED
+
+
+=== A3. SAVEPOINT: keep the valid row, undo only the invalid one ===
+BEGIN
+SET
+SAVEPOINT
+UPDATE 1
+RELEASE
+SAVEPOINT
+psql:sql/01_commit_rollback_savepoint.sql:68: ERROR:  new row for relation "enrollment" violates check constraint "enrollment_exam_score_check"
+ROLLBACK
+transaction is usable again after ROLLBACK TO SAVEPOINT:
+        state         |  txid  
+----------------------+--------
+ still in transaction | 109424
+
+COMMIT
+   matric_no   | ca_score | exam_score | total_score |   status   
+---------------+----------+------------+-------------+------------
+ AU/2023/00002 |     25.0 |       52.0 |        77.0 | COMPLETED
+ AU/2023/00044 |     18.0 |       40.0 |        58.0 | COMPLETED
+ AU/2023/00074 |     28.0 |       61.0 |        89.0 | COMPLETED
+ AU/2023/00086 |     20.0 |       50.0 |        70.0 | COMPLETED
+ AU/2023/00104 |          |            |             | REGISTERED
+
+
+=== A4. Business transaction: "swap course" = DROP one course + REGISTER another ===
+The new course is full, so the drop must be undone too (all-or-nothing).
+UPDATE 1
+ student_id | drop_offering | full_offering 
+------------+---------------+---------------
+          2 |          3075 |          2952
+
+BEGIN
+ fn_drop_course 
+----------------
+ 
+
+ csc404_status_inside_tx 
+-------------------------
+ DROPPED
+
+psql:sql/01_commit_rollback_savepoint.sql:91: ERROR:  Course MTH101 is full (261 / 261)
+ROLLBACK
+ csc404_status_after_rollback | csc404_seats 
+------------------------------+--------------
+ REGISTERED                   |          292
+
+UPDATE 1
+
+=== A5. Durability evidence: committed work is in the WAL ===
+ current_wal_lsn |         wal_file         | synchronous_commit | fsync 
+-----------------+--------------------------+--------------------+-------
+ 0/491C8F90      | 000000010000000000000049 | on                 | on
+
