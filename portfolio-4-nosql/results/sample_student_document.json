@@ -1,0 +1,198 @@
+{
+  "_id": "AU/2022/00007",
+  "student_id": 7,
+  "name": {
+    "first": "Ebuka",
+    "last": "Adeleke"
+  },
+  "gender": "F",
+  "date_of_birth": "2002-12-12",
+  "email": "ebuka.adeleke.7@students.aurelia.edu.ng",
+  "entry_year": 2022,
+  "level": 400,
+  "status": "GRADUATED",
+  "programme": {
+    "code": "B-IFT",
+    "name": "B.Sc. Information Technology",
+    "award": "BSc"
+  },
+  "department": {
+    "code": "IFT",
+    "name": "Information Technology"
+  },
+  "faculty": {
+    "code": "FCI",
+    "name": "Faculty of Computing and Informatics"
+  },
+  "semesters": [
+    {
+      "session": "2022/2023",
+      "term": "FIRST",
+      "courses": [
+        {
+          "code": "IFT101",
+          "title": "Foundations of Information Technology I",
+          "units": 3,
+          "ca": 16.0,
+          "exam": 43.0,
+          "total": 59.0,
+          "grade": "C",
+          "gp": 3.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT102",
+          "title": "Principles of Information Technology I",
+          "units": 4,
+          "ca": 23.0,
+          "exam": 49.0,
+          "total": 72.0,
+          "grade": "A",
+          "gp": 5.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT103",
+          "title": "Methods in Information Technology I",
+          "units": 2,
+          "ca": 19.0,
+          "exam": 37.0,
+          "total": 56.0,
+          "grade": "C",
+          "gp": 3.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT104",
+          "title": "Laboratory Practice in Information Technology I",
+          "units": 3,
+          "ca": 23.0,
+          "exam": 54.0,
+          "total": 77.0,
+          "grade": "A",
+          "gp": 5.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT105",
+          "title": "Mathematics for Information Technology I",
+          "units": 4,
+          "ca": 24.0,
+          "exam": 61.0,
+          "total": 85.0,
+          "grade": "A",
+          "gp": 5.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT106",
+          "title": "Communication in Information Technology I",
+          "units": 2,
+          "ca": 20.0,
+          "exam": 52.0,
+          "total": 72.0,
+          "grade": "A",
+          "gp": 5.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        }
+      ],
+      "units": 18,
+      "gpa": 4.44
+    },
+    {
+      "session": "2022/2023",
+      "term": "SECOND",
+      "courses": [
+        {
+          "code": "IFT107",
+          "title": "Theory of Information Technology I",
+          "units": 3,
+          "ca": 14.0,
+          "exam": 30.0,
+          "total": 44.0,
+          "grade": "E",
+          "gp": 1.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT108",
+          "title": "Applied Information Technology I",
+          "units": 4,
+          "ca": 17.0,
+          "exam": 36.0,
+          "total": 53.0,
+          "grade": "C",
+          "gp": 3.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT109",
+          "title": "Computational Methods in Information Technology I",
+          "units": 2,
+          "ca": 21.0,
+          "exam": 51.0,
+          "total": 72.0,
+          "grade": "A",
+          "gp": 5.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT110",
+          "title": "Systems in Information Technology I",
+          "units": 3,
+          "ca": 19.0,
+          "exam": 46.0,
+          "total": 65.0,
+          "grade": "B",
+          "gp": 4.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT111",
+          "title": "Seminar in Information Technology I",
+          "units": 4,
+          "ca": 18.0,
+          "exam": 48.0,
+          "total": 66.0,
+          "grade": "B",
+          "gp": 4.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        },
+        {
+          "code": "IFT112",
+          "title": "Project Studies in Information Technology I",
+          "units": 2,
+          "ca": 21.0,
+          "exam": 42.0,
+          "total": 63.0,
+          "grade": "B",
+          "gp": 4.0,
+          "status": "COMPLETED",
+          "result_status": "APPROVED"
+        }
+      ],
+      "units": 18,
+      "gpa": 3.39
+    },
+    {
+      "...": "6 more semesters omitted"
+    }
+  ],
+  "summary": {
+    "cgpa": 3.99,
+    "units_taken": 144,
+    "units_passed": 144,
+    "class_of_degree": "Second Class Upper"
+  }
+}

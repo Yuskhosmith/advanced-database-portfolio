@@ -1,0 +1,3 @@
+ETL finished in 4.5s
+  students  documents= 20000  avgObjSize=  7006 B  dataSize= 140.1 MB  storageSize(compressed)=  29.8 MB  indexes=  0.3 MB
+  courses   documents=   577  avgObjSize=   294 B  dataSize=   0.2 MB  storageSize(compressed)=   0.0 MB  indexes=  0.0 MB

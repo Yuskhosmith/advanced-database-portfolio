@@ -1,0 +1,95 @@
+MongoDB 8.0.1 at mongodb://127.0.0.1:27117
+students=20,000  courses=577
+
+==========================================================================================
+N1  Transcript of AU/2022/00007: one document read vs. relational join
+==========================================================================================
+AU/2022/00007  Ebuka Adeleke  B.Sc. Information Technology
+semesters embedded: 8, courses: 48, CGPA 3.99 (Second Class Upper)
+  2022/2023 FIRST  GPA 4.44: IFT101=C, IFT102=A, IFT103=C, IFT104=A, IFT105=A, IFT106=A
+  2022/2023 SECOND GPA 3.39: IFT107=E, IFT108=C, IFT109=A, IFT110=B, IFT111=B, IFT112=B
+  ...
+document size: 11,054 bytes (MongoDB limit 16 MB)
+
+engine                                       median ms   p95 ms
+PostgreSQL: 6-table join (Q01), 48 rows          0.315    0.549
+MongoDB: find_one by _id, 1 document             0.149    0.192
+(client-side round trip, 300 runs each, warm cache, same machine)
+
+==========================================================================================
+N2  Dean's list (top 3 active per department) - aggregation + window function
+==========================================================================================
+  ACC  #1  AU/2023/17486  Victoria Williams        5.0
+  ACC  #1  AU/2024/10311  Lami Gambo               5.0
+  ACC  #1  AU/2025/01882  Kelechi Akinola          5.0
+  ACC  #1  AU/2025/03202  Chinedu Balogun          5.0
+  ACC  #1  AU/2025/05428  Nkechi Ekwueme           5.0
+  ACC  #1  AU/2025/09016  Fatima Ibrahim           5.0
+  ACC  #1  AU/2025/09028  Olamide Ojo              5.0
+  ACC  #1  AU/2025/17884  Kemi Taiwo               5.0
+  ACC  #2  AU/2023/19934  Temitope Mohammed        4.98
+  ... 159 rows
+  before index  plan: SORT <- PROJECTION_DEFAULT <- COLLSCAN
+                docsExamined=20,000 keysExamined=0 time=46 ms
+  after index   plan: PROJECTION_DEFAULT <- FETCH <- IXSCAN(ix_status_dept_cgpa)
+                docsExamined=12,527 keysExamined=12,527 time=47 ms
+
+==========================================================================================
+N3  Login lookup by e-mail: collection scan vs unique secondary index
+==========================================================================================
+  before  COLLSCAN                           docsExamined=20,000 keysExamined=0 time=5 ms
+  after   EXPRESS_IXSCAN(ux_email)           docsExamined=     1 keysExamined=1 time=2 ms
+
+==========================================================================================
+N4  Graph model: full prerequisite chain of CSC412 ($graphLookup) vs SQL recursive CTE
+==========================================================================================
+  MongoDB $graphLookup:
+    depth 0: CSC312  Project Studies in Computer Science III
+    depth 1: CSC212  Project Studies in Computer Science II
+    depth 2: CSC112  Project Studies in Computer Science I
+  PostgreSQL WITH RECURSIVE:
+    depth 0: CSC312  Project Studies in Computer Science III
+    depth 1: CSC212  Project Studies in Computer Science II
+    depth 2: CSC112  Project Studies in Computer Science I
+  Failing CSC101 blocks (transitively): ['CSC201', 'CSC301', 'CSC401']
+
+==========================================================================================
+N5  Flexible schema: polymorphic `attributes` per faculty (no NULL-filled columns)
+==========================================================================================
+  FCI   CSC301: {'lab_hours': 2, 'software': ['Python', 'PostgreSQL'], 'online_delivery': False}
+  FNAS  MCB301: {'lab_hours': 3, 'safety_training_required': True, 'field_trip': False}
+  FEN   EEE301: {'workshop_hours': 3, 'accreditation': 'COREN', 'design_project': False}
+  FMS   ACC301: {'case_studies': 3, 'professional_body': 'ICAN'}
+  courses that use MongoDB in a lab of >= 2 hours: 64
+  courses requiring laboratory safety training: 96
+
+==========================================================================================
+N6  Posting a result: single-document atomic update with arrayFilters
+==========================================================================================
+  student AU/2023/10430, 2026/2027 FIRST, course CSC401: before = {'code': 'CSC401', 'title': 'Foundations of Computer Science IV', 'units': 3, 'ca': None, 'exam': None, 'total': None, 'grade': None, 'gp': None, 'status': 'REGISTERED', 'result_status': 'PENDING'}
+  matched=1 modified=1; after = {'code': 'CSC401', 'title': 'Foundations of Computer Science IV', 'units': 3, 'ca': 24.0, 'exam': 51.0, 'total': 75.0, 'grade': 'A', 'gp': 5.0, 'status': 'REGISTERED', 'result_status': 'SUBMITTED'}
+  All fields of the result change together or not at all (document-level atomicity).
+
+==========================================================================================
+N7  $jsonSchema validation: exam score 85 (> 70) is rejected by the server
+==========================================================================================
+  WriteError code 121: Document failed validation
+  first rule not satisfied: [{'operatorName': 'properties', 'propertiesNotSatisfied': [{'propertyName': 'semesters', 'details': [{'operatorName': 'items', 'reason': 'At least one item did ...
+
+==========================================================================================
+N8  Key-value access pattern: portal session tokens with TTL expiry
+==========================================================================================
+  GET session:7e11afe8... -> {'matric': 'AU/2022/00007', 'role': 'student'}
+  TTL index: [('expires_at_1', 0)]
+  The TTL monitor (runs every 60 s) deletes 'expired-demo' automatically - no cron job needed.
+
+==========================================================================================
+N9  Where the document model is weaker: pass rate per course (cross-document analytics)
+==========================================================================================
+  IFT209  candidates= 268  mean=58.0  pass=86.6%
+  IFT205  candidates= 268  mean=58.0  pass=86.9%
+  CSC312  candidates= 292  mean=58.8  pass=87.7%
+  IFT208  candidates= 268  mean=58.2  pass=87.7%
+  CSC210  candidates= 282  mean=59.9  pass=87.9%
+  ... 192 courses in 75.7 ms. Every matching student document (~10 KB each) must be
+  read and unwound twice; PostgreSQL answers the same question (Q05) from a covering index.

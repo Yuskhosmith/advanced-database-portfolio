@@ -1,0 +1,146 @@
+{
+  "validator": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "required": [
+        "_id",
+        "student_id",
+        "name",
+        "programme",
+        "department",
+        "entry_year",
+        "level",
+        "status",
+        "semesters"
+      ],
+      "properties": {
+        "_id": {
+          "bsonType": "string",
+          "pattern": "^AU/[0-9]{4}/[0-9]{5}$",
+          "description": "matric number"
+        },
+        "student_id": {
+          "bsonType": "int"
+        },
+        "name": {
+          "bsonType": "object",
+          "required": [
+            "first",
+            "last"
+          ]
+        },
+        "gender": {
+          "enum": [
+            "M",
+            "F"
+          ]
+        },
+        "level": {
+          "enum": [
+            100,
+            200,
+            300,
+            400,
+            500,
+            600
+          ]
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "PROBATION",
+            "GRADUATED",
+            "WITHDRAWN",
+            "SUSPENDED"
+          ]
+        },
+        "semesters": {
+          "bsonType": "array",
+          "items": {
+            "bsonType": "object",
+            "required": [
+              "session",
+              "term",
+              "courses"
+            ],
+            "properties": {
+              "term": {
+                "enum": [
+                  "FIRST",
+                  "SECOND"
+                ]
+              },
+              "gpa": {
+                "bsonType": [
+                  "double",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 5
+              },
+              "courses": {
+                "bsonType": "array",
+                "items": {
+                  "bsonType": "object",
+                  "required": [
+                    "code",
+                    "units"
+                  ],
+                  "properties": {
+                    "units": {
+                      "bsonType": "int",
+                      "minimum": 1,
+                      "maximum": 6
+                    },
+                    "ca": {
+                      "bsonType": [
+                        "double",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "maximum": 30
+                    },
+                    "exam": {
+                      "bsonType": [
+                        "double",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "maximum": 70
+                    },
+                    "grade": {
+                      "enum": [
+                        "A",
+                        "B",
+                        "C",
+                        "D",
+                        "E",
+                        "F",
+                        null
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": {
+          "bsonType": "object",
+          "properties": {
+            "cgpa": {
+              "bsonType": [
+                "double",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        }
+      }
+    }
+  },
+  "validationLevel": "strict",
+  "validationAction": "error"
+}

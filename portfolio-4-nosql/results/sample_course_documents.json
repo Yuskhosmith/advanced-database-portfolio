@@ -1,0 +1,84 @@
+[
+  {
+    "_id": "CSC301",
+    "title": "Foundations of Computer Science III",
+    "units": 3,
+    "level": 300,
+    "term": "FIRST",
+    "department": {
+      "code": "CSC",
+      "name": "Computer Science"
+    },
+    "faculty": "FCI",
+    "prerequisites": [
+      "CSC201"
+    ],
+    "attributes": {
+      "lab_hours": 2,
+      "software": [
+        "Python",
+        "PostgreSQL"
+      ],
+      "online_delivery": false
+    }
+  },
+  {
+    "_id": "MCB301",
+    "title": "Foundations of Microbiology III",
+    "units": 3,
+    "level": 300,
+    "term": "FIRST",
+    "department": {
+      "code": "MCB",
+      "name": "Microbiology"
+    },
+    "faculty": "FNAS",
+    "prerequisites": [
+      "MCB201"
+    ],
+    "attributes": {
+      "lab_hours": 3,
+      "safety_training_required": true,
+      "field_trip": false
+    }
+  },
+  {
+    "_id": "EEE301",
+    "title": "Foundations of Electrical and Electronics Engineering III",
+    "units": 3,
+    "level": 300,
+    "term": "FIRST",
+    "department": {
+      "code": "EEE",
+      "name": "Electrical and Electronics Engineering"
+    },
+    "faculty": "FEN",
+    "prerequisites": [
+      "EEE201"
+    ],
+    "attributes": {
+      "workshop_hours": 3,
+      "accreditation": "COREN",
+      "design_project": false
+    }
+  },
+  {
+    "_id": "ACC301",
+    "title": "Foundations of Accounting III",
+    "units": 3,
+    "level": 300,
+    "term": "FIRST",
+    "department": {
+      "code": "ACC",
+      "name": "Accounting"
+    },
+    "faculty": "FMS",
+    "prerequisites": [
+      "ACC201"
+    ],
+    "attributes": {
+      "case_studies": 3,
+      "professional_body": "ICAN"
+    }
+  }
+]
